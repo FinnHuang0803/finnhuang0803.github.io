@@ -1,0 +1,24 @@
+/* 404 page (step 7, Jack: option A): one large line and the "All Work" link, centred on the
+   first screen like the Work opening. Navigation bar and footer are the shared ones. */
+.notfound {
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding-bottom: 56px;                 /* a little above the optical centre, like the project header */
+  text-align: center;
+}
+.notfound__title {
+  font-family: var(--font-display);
+  font-size: var(--hero-size);
+  line-height: var(--hero-lh);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  min-width: 0;
+}

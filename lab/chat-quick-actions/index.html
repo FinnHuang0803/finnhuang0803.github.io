@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chat quick actions</title>
+<style>
+  @font-face {
+    font-family: "Inter";
+    src: url("fonts/inter-latin-wght-normal.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* Linen + Ember tokens (site-design-system.md §2) */
+  :root {
+    color-scheme: light;
+    --bg: #F5F3EF;
+    --surface: #ECE9E4;
+    --line: #DEDAD3;
+    --nav-selected: #E4E0D9;
+    --ink: #242424;
+    --ink-2: #575757;
+    --ink-3: #696969;
+    --accent: #C2410C;
+    /* Avatar backgrounds: soft tints in light mode, deep tints in dark mode. */
+    --av-1: #E6D3C4;
+    --av-2: #D3DDD2;
+    --av-3: #D5D9E7;
+    --av-4: #E6D2DC;
+    --av-5: #E3DBC3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --av-1: #3B2F28;
+      --av-2: #2C3630;
+      --av-3: #2D3241;
+      --av-4: #3A2D35;
+      --av-5: #38331F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --av-1: #3B2F28;
+    --av-2: #2C3630;
+    --av-3: #2D3241;
+    --av-4: #3A2D35;
+    --av-5: #38331F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #161514;
+      --surface: #1F1E1C;
+      --line: #2C2A27;
+      --nav-selected: #2B2926;
+      --ink: #E6E6E6;
+      --ink-2: #B0B0B0;
+      --ink-3: #8C8C8C;
+      --accent: #FB8A5C;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #161514;
+    --surface: #1F1E1C;
+    --line: #2C2A27;
+    --nav-selected: #2B2926;
+    --ink: #E6E6E6;
+    --ink-2: #B0B0B0;
+    --ink-3: #8C8C8C;
+    --accent: #FB8A5C;
+  }
+
+  /* Spring easing for state changes (generated in JS; this is a fallback). */
+  :root {
+    --spring-check: cubic-bezier(.3, 1.3, .5, 1);
+    --spring-check-dur: 520ms;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 25.6px;
+    font-weight: 420;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    transition: background-color 400ms ease, color 400ms ease;
+  }
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+  .proto {
+    width: min(320px, 100%);
+    display: grid;
+    gap: 8px;
+  }
+
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .label {
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 450;
+    color: var(--ink-3);
+    letter-spacing: -0.006em;
+    user-select: none;
+  }
+  .restore {
+    margin: 0; padding: 0; border: 0; background: none;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 450;
+    letter-spacing: -0.006em;
+    color: var(--ink-2);
+    cursor: pointer;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 200ms ease, color 120ms ease;
+  }
+  .restore.is-on { opacity: 1; pointer-events: auto; }
+  @media (hover: hover) { .restore:hover { color: var(--ink); } }
+  .restore:focus { outline: none; }
+  .restore:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Squircle shapes: element is clipped to the path, fill + border drawn on the same path. */
+  .sq { position: relative; isolation: isolate; }
+  .sq > svg.shape {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .sq > svg.shape path { transition: fill 400ms ease, stroke 400ms ease; }
+
+  /* List: rows are stacked by JS (translateY), so they can glide past each other. */
+  .list {
+    position: relative;
+    height: calc(5 * 68px + 4 * 8px);
+    margin: 0; padding: 0;
+    list-style: none;
+  }
+  .row {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 68px;
+    z-index: 1;
+    will-change: transform;
+  }
+  .row.is-front { z-index: 2; }
+  .row.is-hidden { pointer-events: none; }
+
+  .chat {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;      /* page scrolling stays free; taps answer at once (no double-tap zoom wait) */
+    transition:
+      transform var(--spring-check-dur) var(--spring-check),
+      opacity 200ms ease;
+  }
+  .chat:focus { outline: none; }
+  .row.is-hidden .chat { opacity: 0; transform: scale(.94); }
+  .chat > svg.shape .fill  { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+  .chat > svg.shape .hover { fill: var(--nav-selected); stroke: var(--line); stroke-width: 2; opacity: 0; transition: opacity 120ms ease, fill 400ms ease, stroke 400ms ease; }
+  .chat > svg.shape .ring  { fill: none; stroke: var(--accent); stroke-width: 4; opacity: 0; }
+  .row.is-open .chat > svg.shape .hover { opacity: 1; }
+  .chat:focus-visible > svg.shape .ring { opacity: 1; }
+
+  /* Portrait avatars: flat illustrations generated in JS (no photos, no real people). */
+  .avatar {
+    width: 40px; height: 40px;
+    flex: none;
+    border-radius: 50%;
+    overflow: hidden;
+    display: block;
+  }
+  .avatar svg { display: block; width: 100%; height: 100%; }
+  .avatar .bg { transition: fill 400ms ease; }
+  .meta { flex: 1; min-width: 0; display: grid; }
+  .name-line { display: flex; align-items: center; gap: 6px; height: 20px; }
+  .name {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge {
+    width: 12px; height: 12px;
+    flex: none;
+    fill: none;
+    stroke: var(--ink-3);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transform: scale(.4);
+    opacity: 0;
+    transition:
+      transform var(--spring-check-dur) var(--spring-check),
+      opacity 200ms ease,
+      stroke 400ms ease;
+  }
+  .row.is-pinned .badge { transform: none; opacity: 1; }
+  .sr {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .preview {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--ink-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .time {
+    position: absolute;
+    top: 15px; right: 14px;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 450;
+    letter-spacing: -0.006em;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+    transition: opacity 150ms ease, color 400ms ease;
+  }
+  .row.is-open .time { opacity: 0; }
+
+  /* Droplets: drawn as one liquid layer (gooey filter), so neighbours merge while they touch. */
+  .goo {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .goo circle { fill: var(--ink); transition: fill 400ms ease; }
+
+  /* Buttons: transparent 36 × 36 hit areas carrying the icons; JS moves them with their droplet. */
+  .actions { position: absolute; inset: 0; pointer-events: none; }
+  .act {
+    position: absolute;
+    top: 4px;
+    width: 36px; height: 36px;
+    margin: 0; padding: 0; border: 0;
+    background: none;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--surface);
+    cursor: pointer;
+    pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform;
+    transform: scale(0);
+  }
+  .row.is-open .act { pointer-events: auto; }
+  .act:focus { outline: none; }
+  .act:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+  .act svg {
+    width: 15px; height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transition: color 400ms ease;
+  }
+  .act .ko { stroke: var(--ink); stroke-width: 5; transition: stroke 400ms ease; }
+  .act .unpin { display: none; }
+  .row.is-pinned .act[data-act="pin"] .unpin { display: inline; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chat, .badge { transition: opacity 150ms ease !important; }
+    .row.is-hidden .chat { transform: none; }
+    .badge { transform: none; }
+  }
+</style>
+</head>
+<body>
+  <svg class="defs" aria-hidden="true" focusable="false">
+    <defs>
+      <!-- Blur + alpha threshold: circles that touch melt into one shape, then pinch apart. -->
+      <filter id="goo" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2400" height="500" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="4"/>
+        <feColorMatrix values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="proto" id="proto">
+    <div class="head">
+      <span class="label" id="list-label">Chats</span>
+      <button class="restore" id="restore" type="button" tabindex="-1">Show hidden</button>
+    </div>
+    <ul class="list" id="list" aria-labelledby="list-label"></ul>
+  </div>
+
+<script>
+(() => {
+  const CHATS = [
+    { name: "Mia Chen",  msg: "Running five minutes late, sorry!", time: "9:41" },
+    { name: "Leo Park",  msg: "Can you send me the slides?",       time: "9:12" },
+    { name: "Ava Lin",   msg: "Dinner on Friday works for me.",    time: "Yesterday" },
+    { name: "Sam Ortiz", msg: "Landed safely. Talk soon.",         time: "Mon" },
+    { name: "Iris Wong", msg: "Thanks, that really helped.",       time: "Sun" },
+  ];
+
+  // ---------- Portrait avatars ----------
+  // Every part is drawn from a seeded shuffle, so the five people always look different.
+  // A fixed seed gives the same faces on every visit; use Date.now() for new faces on each load.
+  const AVATAR_SEED = 20261111;
+  function rng(seed) {             // mulberry32
+    return () => {
+      seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shuffled(arr, rand) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  const SKINS   = ["#F2CDAA", "#E2B08A", "#C98D62", "#9E6845", "#6E4A33"];
+  const HAIRS   = ["#2B2320", "#4A3426", "#7A4E2D", "#B4834F", "#BDB1A4"];
+  const CLOTHES = ["#7D90A8", "#A6826A", "#6F8F7E", "#9A7A94", "#B89668"];
+  const BGS     = ["var(--av-1)", "var(--av-2)", "var(--av-3)", "var(--av-4)", "var(--av-5)"];
+  const CROWN = "M13 18.5C12.6 12.6 15.8 10 20 10s7.4 2.6 7 8.5c-1.3-3.2-3.9-4.6-7-4.6s-5.7 1.4-7 4.6Z";
+  const STYLES = [
+    { back: "", front: `<path d="${CROWN}"/>` },                                                  // short crop
+    { back: `<path d="M12 19c0-6.6 3.4-10 8-10s8 3.4 8 10v13H12Z"/>`,                           // long
+      front: `<path d="M13 18c0-5 3-8 7-8s7 3 7 8c-2-2.6-4.4-3.8-7-3.8S15 15.4 13 18Z"/>` },
+    { back: `<circle cx="20" cy="8.6" r="3.8"/>`, front: `<path d="${CROWN}"/>` },               // bun
+    { back: "", front: `<path d="M13 19c-.6-6 2.8-9 7.2-9 4.2 0 7.2 2.6 6.8 8-2.6-3-7.4-4.4-11.2-2.2-1.4.8-2.3 1.9-2.8 3.2Z"/>` }, // side part
+    { back: "", front: [[14.6,13.6,3.3],[18,11.2,3.5],[22,11.2,3.5],[25.4,13.6,3.3],[13.4,17,2.4],[26.6,17,2.4]]
+        .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join("") },              // curly
+  ];
+  const avatarParts = (() => {
+    const rand = rng(AVATAR_SEED);
+    const [s, h, c, b, st] = [SKINS, HAIRS, CLOTHES, BGS, STYLES].map(a => shuffled(a, rand));
+    return CHATS.map((_, i) => ({ skin: s[i], hair: h[i], clothes: c[i], bg: b[i], style: st[i] }));
+  })();
+  function portrait({ skin, hair, clothes, bg, style }) {
+    return `<svg viewBox="0 0 40 40" aria-hidden="true">
+      <rect class="bg" width="40" height="40" style="fill:${bg}"/>
+      <g fill="${hair}">${style.back}</g>
+      <rect x="17.6" y="24" width="4.8" height="8" rx="2" fill="${skin}"/>
+      <path d="M5 42c0-7.5 6.5-11.5 15-11.5S35 34.5 35 42Z" fill="${clothes}"/>
+      <ellipse cx="20" cy="19" rx="6.8" ry="7.8" fill="${skin}"/>
+      <circle cx="17.4" cy="19.6" r=".95" fill="#2B2320"/>
+      <circle cx="22.6" cy="19.6" r=".95" fill="#2B2320"/>
+      <path d="M18.4 22.7q1.6 1.1 3.2 0" fill="none" stroke="#2B2320" stroke-width=".9" stroke-linecap="round" opacity=".7"/>
+      <g fill="${hair}">${style.front}</g>
+    </svg>`;
+  }
+  const ROW_H = 68, GAP = 8, STEP = ROW_H + GAP;
+  const R = 14;              // droplet radius (28px buttons)
+  const INSET = 8;           // droplets sit 8px in from the row's top and right edges
+  const PITCH = 36;          // centre to centre (8px gap between buttons)
+  const CY = INSET + R;      // droplet centre line
+  const STAGGER = 45;        // ms between droplets
+  const MOVE_DELAY = 180;    // ms: let the pin land before the row travels
+  const HIDE_DELAY = 120;    // ms: let the row start fading before the others close the gap
+
+  // Emerging order: Hide buds from the row's edge, Pin from Hide, Video from Pin, Call from Video.
+  const ACTS = [
+    { id: "hide",  label: "Hide",
+      icon: `<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6"/><path class="ko" d="M4.5 4.5l15 15"/><path d="M4.5 4.5l15 15"/>` },
+    { id: "pin",   label: "Pin",
+      icon: `<path d="M9 4h6M10 4v5.5L7 13v1.5h10V13l-3-3.5V4M12 14.5V20"/><g class="unpin"><path class="ko" d="M4.5 4.5l15 15"/><path d="M4.5 4.5l15 15"/></g>` },
+    { id: "video", label: "Video call",
+      icon: `<rect x="2.5" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M15 10.5l6.5-3.5v10l-6.5-3.5"/>` },
+    { id: "call",  label: "Call",
+      icon: `<path d="M6.5 3.5h2.8l1.4 4-1.9 1.3a10.5 10.5 0 0 0 6.4 6.4l1.3-1.9 4 1.4v2.8a2 2 0 0 1-2.1 2A16.5 16.5 0 0 1 4.5 5.6a2 2 0 0 1 2-2.1Z"/>` },
+  ];
+  const PIN_PATH = "M9 4h6M10 4v5.5L7 13v1.5h10V13l-3-3.5V4M12 14.5V20";
+
+  const root = document.documentElement;
+  const list = document.getElementById("list");
+  const restoreBtn = document.getElementById("restore");
+  const SVGNS = "http://www.w3.org/2000/svg";
+
+  // Theme: ?theme=light|dark overrides the system setting (the Lab page can also set data-theme).
+  const qTheme = new URLSearchParams(location.search).get("theme");
+  if (qTheme === "light" || qTheme === "dark") root.dataset.theme = qTheme;
+
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+  // ---------- Spring easing as CSS linear() (same generator as the other Lab prototypes) ----------
+  function springLinear(response, damping) {
+    const w = 2 * Math.PI / response;
+    const wd = w * Math.sqrt(1 - damping * damping);
+    const x = t => 1 - Math.exp(-damping * w * t) * (Math.cos(wd * t) + (damping * w / wd) * Math.sin(wd * t));
+    const dur = Math.log(1000) / (damping * w);
+    const n = 48, pts = [];
+    for (let i = 0; i <= n; i++) pts.push(+x(dur * i / n).toFixed(4));
+    pts[n] = 1;
+    return { easing: `linear(${pts.join(", ")})`, ms: Math.round(dur * 1000) };
+  }
+  if (CSS.supports("transition-timing-function", "linear(0, 1)")) {
+    const check = springLinear(0.42, 0.72);
+    root.style.setProperty("--spring-check", check.easing);
+    root.style.setProperty("--spring-check-dur", check.ms + "ms");
+  }
+
+  // ---------- Squircle (site-design-system.md §2) ----------
+  function squircle(w, h, r, s = 0.6) {
+    const rad = d => d * Math.PI / 180, f = v => +v.toFixed(3);
+    const p = (1 + s) * r;
+    if (p > Math.min(w, h) / 2) throw new Error("too small for 60% smoothing: " + w + "x" + h + " r" + r);
+    const am = 90 * (1 - s), L = Math.sin(rad(am / 2)) * r * Math.SQRT2;
+    const p34 = r * Math.tan(rad((90 - am) / 4)), beta = 45 * s;
+    const c = p34 * Math.cos(rad(beta)), d = c * Math.tan(rad(beta));
+    const b = (p - L - c - d) / 3, a = 2 * b;
+    const A=f(a),AB=f(a+b),ABC=f(a+b+c),BC=f(b+c),C=f(c),D=f(d),R=f(r),l=f(L);
+    return [`M ${f(w-p)} 0`,`c ${A} 0 ${AB} 0 ${ABC} ${D}`,`a ${R} ${R} 0 0 1 ${l} ${l}`,`c ${D} ${C} ${D} ${BC} ${D} ${ABC}`,
+      `L ${w} ${f(h-p)}`,`c 0 ${A} 0 ${AB} ${-D} ${ABC}`,`a ${R} ${R} 0 0 1 ${-l} ${l}`,`c ${-C} ${D} ${-BC} ${D} ${-ABC} ${D}`,
+      `L ${f(p)} ${h}`,`c ${-A} 0 ${-AB} 0 ${-ABC} ${-D}`,`a ${R} ${R} 0 0 1 ${-l} ${-l}`,`c ${-D} ${-C} ${-D} ${-BC} ${-D} ${-ABC}`,
+      `L 0 ${f(p)}`,`c 0 ${-A} 0 ${-AB} ${D} ${-ABC}`,`a ${R} ${R} 0 0 1 ${l} ${-l}`,`c ${C} ${-D} ${BC} ${-D} ${ABC} ${-D}`,`Z`].join(" ");
+  }
+
+  // ---------- Springs ----------
+  const spring = (response, damping) => {
+    const k = (2 * Math.PI / response) ** 2;
+    return { k, c: 2 * damping * Math.sqrt(k) };
+  };
+  const SP_DROP  = spring(0.30, 0.60);   // droplets: quick pop with a little bounce (= press spring)
+  const SP_PRESS = spring(0.30, 0.60);   // button hover / press
+  const SP_MOVE  = spring(0.50, 0.80);   // row travel (= checklist rows)
+  function integrate(o, key, target, sp, dt) {
+    const n = Math.max(1, Math.ceil(dt / 0.004)), h = dt / n;
+    let x = o[key], v = o[key + "V"];
+    for (let s = 0; s < n; s++) {
+      v += (-sp.k * (x - target) - sp.c * v) * h;
+      x += v * h;
+    }
+    o[key] = x; o[key + "V"] = v;
+  }
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+  // ---------- Build rows ----------
+  const ro = new ResizeObserver(entries => entries.forEach(e => {
+    const r = rows.find(t => t.chat === e.target);
+    if (r) shapeRow(r);
+  }));
+
+  const rows = CHATS.map((c, i) => {
+    const li = document.createElement("li");
+    li.className = "row";
+    li.innerHTML = `
+      <div class="chat sq" data-radius="8" tabindex="-1" role="group" aria-label="${c.name}">
+        <svg class="shape" aria-hidden="true"><path class="fill"/><path class="hover"/><path class="ring"/></svg>
+        <span class="avatar" aria-hidden="true">${portrait(avatarParts[i])}</span>
+        <span class="meta">
+          <span class="name-line">
+            <span class="name">${c.name}</span>
+            <svg class="badge" viewBox="0 0 24 24" aria-hidden="true"><path d="${PIN_PATH}"/></svg>
+            <span class="sr" hidden>, pinned</span>
+          </span>
+          <span class="preview">${c.msg}</span>
+        </span>
+        <span class="time">${c.time}</span>
+        <svg class="goo" aria-hidden="true"><g filter="url(#goo)"><circle class="lip" r="${R}"/>${ACTS.map(() => `<circle r="${R}"/>`).join("")}</g></svg>
+        <div class="actions">
+          ${ACTS.map((a, k) => [a, k]).reverse().map(([a, k]) => `
+          <button class="act" type="button" tabindex="-1" data-act="${a.id}" aria-label="${a.label} ${c.name}" style="right:${INSET - 4 + k * PITCH}px">
+            <svg viewBox="0 0 24 24" aria-hidden="true">${a.icon}</svg>
+          </button>`).join("")}
+        </div>
+      </div>`;
+    list.appendChild(li);
+    const chat = li.firstElementChild;
+    const goo = chat.querySelector(".goo");
+    const circles = [...goo.querySelectorAll("circle")];
+    const r = {
+      i, li, chat, goo,
+      lip: circles[0],
+      drops: ACTS.map((a, k) => {
+        const btn = chat.querySelector(`.act[data-act="${a.id}"]`);
+        return { k, btn, icon: btn.firstElementChild, circle: circles[k + 1],
+                 p: 0, pV: 0, goal: 0, cur: 0, at: 0,
+                 s: 1, sV: 0, hover: false, down: false };
+      }),
+      W: 320, y: i * STEP, yV: 0, target: i * STEP,
+      open: false, pinned: false, pinAt: 0, hidden: false,
+    };
+    li.style.transform = `translateY(${r.y}px)`;
+    shapeRow(r); ro.observe(chat);
+    render(r);
+    return r;
+  });
+
+  function shapeRow(r) {
+    const w = r.chat.offsetWidth, h = r.chat.offsetHeight;
+    if (!w || !h) return;
+    r.W = w;
+    const d = squircle(w, h, +r.chat.dataset.radius);
+    r.chat.style.clipPath = `path("${d}")`;
+    const svg = r.chat.querySelector(":scope > svg.shape");
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.querySelectorAll("path").forEach(p => p.setAttribute("d", d));
+    r.goo.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    render(r);
+  }
+
+  // ---------- Droplet drawing ----------
+  function render(r) {
+    const W = r.W, reduce = reduceMotion.matches;
+    for (const d of r.drops) {
+      const rest = W - INSET - R - d.k * PITCH;
+      // Each droplet buds from its neighbour (Hide from just past the row's right edge).
+      const from = d.k === 0 ? W + 6 : rest + PITCH;
+      const p = d.p;
+      let x, sc, alpha, iconAlpha;
+      if (reduce) {
+        x = rest; sc = 1; alpha = clamp(p, 0, 1); iconAlpha = alpha;
+      } else {
+        x = from + (rest - from) * p;
+        sc = p <= 0 ? 0 : 0.3 + 0.7 * p;
+        alpha = clamp(p / 0.12, 0, 1);
+        iconAlpha = clamp((p - 0.6) / 0.35, 0, 1);
+      }
+      sc *= d.s;
+      d.circle.setAttribute("transform", `translate(${x.toFixed(2)} ${CY}) scale(${Math.max(0, sc).toFixed(3)})`);
+      d.circle.style.opacity = alpha;
+      d.btn.style.transform = `translateX(${(x - rest).toFixed(2)}px) scale(${Math.max(0, sc).toFixed(3)})`;
+      d.icon.style.opacity = iconAlpha;
+    }
+    // The row's edge swells while Hide squeezes out of it (and back in).
+    const p0 = clamp(r.drops[0].p, 0, 1);
+    const lip = reduce ? 0 : 4 * p0 * (1 - p0) * 0.85;
+    r.lip.setAttribute("transform", `translate(${W + 4} ${CY}) scale(${lip.toFixed(3)})`);
+  }
+
+  // ---------- Open / close ----------
+  let hoverRow = null, touchRow = null;
+  function focusOpen(r) {
+    const a = document.activeElement;
+    return r.chat.contains(a) && a.matches(":focus-visible");
+  }
+  function updateOpen() {
+    for (const r of rows) setOpen(r, !r.hidden && (r === hoverRow || r === touchRow || focusOpen(r)));
+  }
+  function setOpen(r, open) {
+    if (r.open === open) return;
+    r.open = open;
+    r.li.classList.toggle("is-open", open);
+    const now = performance.now();
+    for (const d of r.drops) {
+      d.goal = open ? 1 : 0;
+      // Out: Hide first. Back in: reverse order, Call first.
+      d.at = now + (reduceMotion.matches ? 0 : (open ? d.k : ACTS.length - 1 - d.k) * STAGGER);
+    }
+    kick();
+  }
+
+  // Mouse / pen: the row under the cursor is open. Checked by position, so a row that moves
+  // under a still cursor (after Pin or Hide) is picked up too.
+  let lastPt = null;
+  function rowAtPoint() {
+    if (!lastPt) return null;
+    const el = document.elementFromPoint(lastPt.x, lastPt.y);
+    const li = el && el.closest(".row");
+    return rows.find(r => r.li === li && !r.hidden) || null;
+  }
+  function reevalHover() {
+    const r = rowAtPoint();
+    if (r !== hoverRow) { hoverRow = r; updateOpen(); }
+  }
+  document.addEventListener("pointermove", e => {
+    if (e.pointerType === "touch") return;
+    lastPt = { x: e.clientX, y: e.clientY };
+    reevalHover();
+  });
+  document.addEventListener("pointerout", e => {
+    if (e.pointerType !== "touch" && !e.relatedTarget) { lastPt = null; reevalHover(); }
+  });
+
+  // Touch: tapping a row reveals its buttons; tapping it again or anywhere else retracts them.
+  let lastPointerType = "mouse";
+  document.addEventListener("pointerdown", e => {
+    lastPointerType = e.pointerType;
+    if (e.pointerType === "touch" && touchRow && !touchRow.chat.contains(e.target)) {
+      touchRow = null; updateOpen();
+    }
+  }, true);
+  list.addEventListener("click", e => {
+    if (lastPointerType !== "touch" || e.target.closest(".act")) return;
+    const r = rows.find(t => t.chat.contains(e.target));
+    if (!r || r.hidden) return;
+    touchRow = touchRow === r ? null : r;
+    updateOpen();
+  });
+
+  // Keyboard: a focused row (or one of its buttons) is open.
+  document.addEventListener("focusin", updateOpen);
+  document.addEventListener("focusout", () => requestAnimationFrame(updateOpen));
+  // The whole list is one Tab stop (roving focus, step 7): Tab lands on one chat; Up and Down
+  // move between chats (Home / End: first / last); Right goes into that chat's buttons and
+  // Left / Right move between them; Left from the first button or Escape returns to the chat;
+  // Escape on a chat leaves the list.
+  let current = null;                        // the chat that holds the list's Tab stop
+  function syncRoving() {
+    const vis = order();
+    if (!current || current.hidden) current = vis[0] || null;
+    for (const r of rows) r.chat.tabIndex = r === current ? 0 : -1;
+  }
+  list.addEventListener("focusin", e => {
+    const r = rows.find(t => t.chat.contains(e.target));
+    if (r && r !== current) { current = r; syncRoving(); }
+  });
+  list.addEventListener("keydown", e => {
+    const r = rows.find(t => t.chat.contains(document.activeElement));
+    if (!r) return;
+    const onChat = document.activeElement === r.chat;
+    const acts = [...r.chat.querySelectorAll(".act")];
+    const k = acts.indexOf(document.activeElement);
+    const vis = order(), i = vis.indexOf(r);
+    let to = null;
+    if (e.key === "ArrowDown") to = vis[i + 1] && vis[i + 1].chat;
+    else if (e.key === "ArrowUp") to = vis[i - 1] && vis[i - 1].chat;
+    else if (e.key === "Home") to = vis[0] && vis[0].chat;
+    else if (e.key === "End") to = vis[vis.length - 1] && vis[vis.length - 1].chat;
+    else if (e.key === "ArrowRight") to = onChat ? acts[0] : acts[k + 1];
+    else if (e.key === "ArrowLeft") to = onChat ? null : (k > 0 ? acts[k - 1] : r.chat);
+    else if (e.key === "Escape") { if (onChat) document.activeElement.blur(); else r.chat.focus(); e.preventDefault(); return; }
+    else return;
+    e.preventDefault();
+    if (to) to.focus();
+  });
+  syncRoving();
+
+  // ---------- Buttons ----------
+  for (const r of rows) for (const d of r.drops) {
+    const b = d.btn;
+    b.addEventListener("pointerenter", e => { if (e.pointerType !== "touch") { d.hover = true; kick(); } });
+    b.addEventListener("pointerleave", () => { d.hover = false; d.down = false; kick(); });
+    b.addEventListener("pointerdown", () => { d.down = true; kick(); });
+    b.addEventListener("pointerup", () => { d.down = false; kick(); });
+    b.addEventListener("pointercancel", () => { d.down = false; kick(); });
+    b.addEventListener("click", e => {
+      if (e.detail === 0) {             // keyboard: show the same press
+        d.down = true; kick();
+        setTimeout(() => { d.down = false; kick(); }, 120);
+      }
+      const id = ACTS[d.k].id;
+      if (id === "pin") togglePin(r);
+      else if (id === "hide") hideRow(r);
+    });
+  }
+
+  // ---------- Pin / Hide / Restore ----------
+  let stamp = 0, moveTimer = 0;
+  function togglePin(r) {
+    r.pinned = !r.pinned;
+    r.pinAt = r.pinned ? ++stamp : 0;
+    r.li.classList.toggle("is-pinned", r.pinned);
+    r.li.querySelector(".sr").hidden = !r.pinned;
+    r.chat.setAttribute("aria-label", CHATS[r.i].name + (r.pinned ? ", pinned" : ""));
+    const pinBtn = r.drops[1].btn;
+    pinBtn.setAttribute("aria-label", `${r.pinned ? "Unpin" : "Pin"} ${CHATS[r.i].name}`);
+    // The row is about to travel away from the cursor or finger: tuck its buttons back in.
+    if (hoverRow === r) hoverRow = null;
+    if (touchRow === r) touchRow = null;
+    updateOpen();
+    rows.forEach(t => t.li.classList.toggle("is-front", t === r));
+    clearTimeout(moveTimer);
+    moveTimer = setTimeout(relayout, reduceMotion.matches ? 0 : MOVE_DELAY);
+  }
+
+  function hideRow(r) {
+    const vis = order();
+    const idx = vis.indexOf(r);
+    const hadFocus = r.chat.contains(document.activeElement);
+    r.hidden = true;
+    r.li.classList.add("is-hidden");
+    r.li.inert = true;
+    if (hoverRow === r) hoverRow = null;
+    if (touchRow === r) touchRow = null;
+    updateOpen();
+    syncRestore();
+    if (hadFocus) {
+      const next = vis[idx + 1] || vis[idx - 1];
+      (next ? next.chat : restoreBtn).focus();
+    }
+    clearTimeout(moveTimer);
+    moveTimer = setTimeout(relayout, reduceMotion.matches ? 0 : HIDE_DELAY);
+  }
+
+  restoreBtn.addEventListener("click", () => {
+    for (const r of rows) if (r.hidden) {
+      r.hidden = false;
+      r.li.inert = false;
+    }
+    relayout(true);
+    syncRestore();
+  });
+  function syncRestore() {
+    syncRoving();
+    const n = rows.filter(r => r.hidden).length;
+    restoreBtn.classList.toggle("is-on", n > 0);
+    restoreBtn.tabIndex = n > 0 ? 0 : -1;
+    restoreBtn.textContent = n > 0 ? `Show hidden (${n})` : "Show hidden";
+    if (n === 0 && document.activeElement === restoreBtn) {
+      const first = order()[0]; if (first) first.chat.focus();
+    }
+  }
+
+  // Pinned chats on top (most recently pinned first), then the rest in their original order.
+  function order() {
+    const vis = rows.filter(r => !r.hidden);
+    const pinned = vis.filter(r => r.pinned).sort((a, b) => b.pinAt - a.pinAt);
+    const rest = vis.filter(r => !r.pinned).sort((a, b) => a.i - b.i);
+    return pinned.concat(rest);
+  }
+
+  function relayout(restoring = false) {
+    const next = order();
+    // Keep the DOM (and Tab order) in visual order without moving the focused row.
+    const focused = rows.find(t => t.li.contains(document.activeElement));
+    const seq = next.concat(rows.filter(r => r.hidden));
+    if (focused && seq.includes(focused)) {
+      const k = seq.indexOf(focused);
+      seq.slice(0, k).forEach(t => list.insertBefore(t.li, focused.li));
+      seq.slice(k + 1).forEach(t => list.appendChild(t.li));
+    } else {
+      seq.forEach(t => list.appendChild(t.li));
+    }
+    next.forEach((t, idx) => {
+      const y = idx * STEP;
+      const wasHidden = t.li.classList.contains("is-hidden");
+      if (wasHidden) {
+        // Restored rows appear in their slot (fade + grow) while the others make room.
+        t.y = y; t.yV = 0; t.target = y;
+        t.li.style.transform = `translateY(${y}px)`;
+        t.li.classList.remove("is-hidden");
+        return;
+      }
+      if (t.target === y) return;
+      t.target = y;
+      if (reduceMotion.matches) {
+        t.y = y; t.yV = 0;
+        t.li.style.transform = `translateY(${y}px)`;
+        t.li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: "ease" });
+      }
+    });
+    kick();
+  }
+
+  // ---------- One animation loop for droplets, presses and row travel (all interruptible) ----------
+  let raf = 0, last = 0, running = false;
+  function frame(t) {
+    raf = 0;   // anything below that calls kick() schedules the next frame
+    const dt = Math.min(0.5, Math.max(0, (t - last) / 1000) || 0.016);
+    last = t;
+    const now = performance.now(), reduce = reduceMotion.matches;
+    let busy = false, travelled = false;
+
+    for (const r of rows) {
+      let dirty = false;
+      for (const d of r.drops) {
+        if (now >= d.at) d.cur = d.goal;
+        if (now < d.at) busy = true;
+        if (d.p !== d.cur || d.pV !== 0) {
+          if (reduce) {
+            const dir = Math.sign(d.cur - d.p);
+            d.p = clamp(d.p + dir * dt / 0.15, Math.min(d.p, d.cur), Math.max(d.p, d.cur));
+            d.pV = 0;
+          } else {
+            integrate(d, "p", d.cur, SP_DROP, dt);
+            if (Math.abs(d.p - d.cur) < 0.001 && Math.abs(d.pV) < 0.01) { d.p = d.cur; d.pV = 0; }
+          }
+          if (d.p !== d.cur) busy = true;
+          dirty = true;
+        }
+        const sGoal = reduce ? 1 : d.down ? 0.88 : d.hover ? 1.08 : 1;
+        if (d.s !== sGoal || d.sV !== 0) {
+          integrate(d, "s", sGoal, SP_PRESS, dt);
+          if (Math.abs(d.s - sGoal) < 0.0005 && Math.abs(d.sV) < 0.01) { d.s = sGoal; d.sV = 0; }
+          else busy = true;
+          dirty = true;
+        }
+      }
+      if (dirty) render(r);
+
+      if (!reduce && (r.y !== r.target || r.yV !== 0)) {
+        integrate(r, "y", r.target, SP_MOVE, dt);
+        if (Math.abs(r.y - r.target) < 0.05 && Math.abs(r.yV) < 0.5) { r.y = r.target; r.yV = 0; travelled = true; }
+        else busy = true;
+        r.li.style.transform = `translateY(${r.y.toFixed(2)}px)`;
+      }
+    }
+    if (travelled) reevalHover();   // whichever row now sits under a still cursor opens
+    if (busy) kick();
+    else if (!raf) running = false;
+  }
+  function kick() {
+    if (!raf) {
+      if (!running) last = performance.now();
+      running = true;
+      raf = requestAnimationFrame(frame);
+    }
+  }
+})();
+</script>
+</body>
+</html>

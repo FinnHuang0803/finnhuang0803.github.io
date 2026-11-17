@@ -1,0 +1,164 @@
+/* Lab: title, filters and the grid of live prototypes. Rules: site-design-system.md §6, §2, §8. */
+
+.lab {
+  --lab-gutter: clamp(16px, 1.6667vw, 24px);          /* almost edge to edge (§6): 24 at 1440, 16 on phones */
+  --lab-gap: clamp(16px, 1.6667vw, 24px);
+  --lab-stage-h: 520px;                               /* every card the same size */
+  padding-bottom: var(--section-gap);
+}
+
+/* ---------- Page top: large title + small subtitle, centred ---------- */
+.lab-head {
+  padding: clamp(48px, 6.6667vw, 96px) var(--gutter) 0;
+  text-align: center;
+}
+.lab-title {
+  font-family: var(--font-display);
+  font-size: var(--hero-size);
+  line-height: var(--hero-lh);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+}
+.lab-sub {
+  margin-top: 16px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight-strong);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+
+/* ---------- Filters: same pill as the selected nav item (36 tall, 14px sides, --nav-selected) ---------- */
+.lab-filters {
+  position: relative;
+  isolation: isolate;
+  width: max-content;
+  max-width: calc(100% - 2 * var(--gutter));
+  margin: clamp(32px, 3.3333vw, 48px) auto 0;
+  display: flex;
+  gap: 4px;
+}
+.lab-filter {
+  position: relative;
+  display: grid;
+  margin: 0;
+  padding: 6.5px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font-size: var(--nav-size);
+  line-height: var(--nav-lh);
+  font-weight: var(--nav-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--spring-press-dur) var(--spring-press);
+}
+/* Reserve the selected (500) width so the row never shifts when the weight changes. */
+.lab-filter::before {
+  content: attr(data-label);
+  grid-area: 1 / 1;
+  font-weight: var(--nav-weight-selected);
+  visibility: hidden;
+  height: 0;
+}
+.lab-filter::after {                         /* taller hit area for fingers */
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
+.lab-filter[aria-pressed="true"] { color: var(--ink); font-weight: var(--nav-weight-selected); }
+@media (hover: hover) { .lab-filter:hover { color: var(--ink); } }
+.lab-filter:active {
+  transform: scale(.96);
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+/* The selected pill: two round caps and a middle that stretches (transform only, so the
+   ends keep their exact full-pill shape while it slides). */
+.lab-pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.lab-pill > i {
+  position: absolute;
+  top: 0; left: 0;
+  height: 36px;
+  background: var(--nav-selected);
+  will-change: transform;
+}
+.lab-pill__l { width: 18px; border-radius: 18px 0 0 18px; }
+.lab-pill__r { width: 18px; border-radius: 0 18px 18px 0; }
+.lab-pill__m { width: 100px; transform-origin: 0 0; }
+/* Until lab.js has measured the buttons, the selected one carries its own pill. */
+.lab-filters:not(.is-live) .lab-pill { display: none; }
+.lab-filters:not(.is-live) .lab-filter[aria-pressed="true"] { background: var(--nav-selected); }
+
+/* ---------- Grid: at most 3 per row, almost edge to edge ---------- */
+.lab-grid {
+  position: relative;                        /* cards leaving the grid are held here while they fade */
+  max-width: 1680px;
+  margin: 32px auto 0;
+  padding: 0 var(--lab-gutter);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px var(--lab-gap);
+  align-items: start;
+}
+@media (max-width: 1199.98px) { .lab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 719.98px)  { .lab-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.lab-cell {
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+.lab-cell.is-leaving { position: absolute; pointer-events: none; }
+/* A prototype that needs room ("span": 2 in lab.json) takes two columns on desktop only;
+   tablet and phone keep their column counts (§6). */
+@media (min-width: 1200px) { .lab-cell--wide { grid-column: span 2; } }
+
+/* The stage is the prototype's own plain page (its --bg), framed by a 1px --line squircle. */
+.lab-stage {
+  position: relative;
+  height: var(--lab-stage-h);
+  background: var(--bg);
+  border-radius: 16px;                       /* replaced by the squircle clip once JS runs */
+}
+.lab-stage > iframe {
+  display: block;
+  width: 100%; height: 100%;
+  border: 0;
+  background: var(--bg);
+  color-scheme: normal;
+}
+/* The frame line sits above the prototype (the .sq default puts shapes behind). */
+.sq.lab-stage > svg.sq-shape { z-index: 1; }
+.lab-stage > svg.sq-shape .line { fill: none; stroke: var(--line); stroke-width: 2; }
+
+/* Name and how to interact, under the stage. */
+.lab-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 0 4px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  letter-spacing: var(--tracking-small);
+}
+.lab-meta__name { font-size: inherit; line-height: inherit; font-weight: var(--note-title-weight); color: var(--ink); }
+.lab-meta__kind { font-weight: var(--meta-weight-strong); color: var(--ink-3); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-filter { transition: none; }
+  .lab-filter:active { transform: none; }
+}

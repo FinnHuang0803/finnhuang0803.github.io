@@ -1,0 +1,33 @@
+[
+  {
+    "id": "password-eye",
+    "title": "Password eye",
+    "category": "press",
+    "date": "2026-11-11"
+  },
+  {
+    "id": "checklist",
+    "title": "Checklist",
+    "category": "press",
+    "date": "2026-11-11"
+  },
+  {
+    "id": "card-wallet",
+    "title": "Card wallet",
+    "category": "drag",
+    "date": "2026-11-11"
+  },
+  {
+    "id": "chat-quick-actions",
+    "title": "Chat quick actions",
+    "category": "hover",
+    "date": "2026-11-11"
+  },
+  {
+    "id": "magnifier",
+    "title": "Magnifier",
+    "category": "hover",
+    "span": 2,
+    "date": "2026-11-17"
+  }
+]

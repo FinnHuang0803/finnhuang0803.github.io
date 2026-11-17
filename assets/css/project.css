@@ -1,0 +1,628 @@
+/* Project page template: header, sections, annotation markers and notes, figure layouts,
+   Homeproof timeline diagram. Rules: site-design-system.md §5–§5.4, §2, §8. */
+
+/* One phone width for the whole page (§5.3): 320 on desktop, 260 below 768. Where three
+   phones cannot sit side by side, rows wrap to two and the phone shrinks just enough
+   to fit two (305 at 768 wide). */
+.project { container-type: inline-size; }
+.project-section, .project-hero { --phone-w: min(320px, (100cqw - 2 * var(--gutter) - 80px) / 2); }
+@media (max-width: 767.98px) {
+  .project-section, .project-hero { --phone-w: 260px; }
+}
+
+/* ---------- Header: fills the first screen (§2 pacing, §5) ---------- */
+.project-hero {
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  display: flex;
+  flex-direction: column;
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+.back-link { align-self: flex-start; }      /* the link itself is shared: site.css */
+.project-hero__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 56px;          /* the block sits a little above the optical centre */
+}
+.project-hero__title {
+  font-family: var(--font-display);
+  font-size: var(--hero-size);
+  line-height: var(--hero-lh);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+  text-wrap: balance;
+}
+.project-hero__intro {
+  max-width: 640px;
+  margin-top: 24px;
+  font-size: var(--lead-size);
+  line-height: var(--lead-lh);
+  font-weight: var(--lead-weight);
+  color: var(--ink-2);
+}
+.info-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 64px;
+  margin: 48px 0 0;
+}
+.info-line dt {
+  font-size: var(--meta-size-small);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight-strong);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+.info-line dd {
+  margin: 4px 0 0;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight-strong);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink);
+}
+
+/* ---------- Sections ---------- */
+.project-section {
+  --block-gap: clamp(64px, calc(42.67px + 3.7037vw), 96px);   /* 96 at 1440, 64 at 576 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
+  padding-bottom: var(--section-gap);
+}
+.section-title {
+  max-width: 820px;
+  margin-bottom: calc(32px - var(--block-gap));                 /* headline to what follows: 32 */
+  font-family: var(--font-display);
+  font-size: var(--h2-major-size);
+  line-height: var(--heading-lh);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+  text-wrap: balance;
+}
+.lead {
+  max-width: 640px;
+  display: grid;
+  gap: 16px;
+  font-size: var(--lead-size);
+  line-height: var(--lead-lh);
+  font-weight: var(--lead-weight);
+  color: var(--ink-2);
+}
+.section-title + .lead { margin-top: 0; }
+figure { margin: 0; }
+
+/* ---------- Phones and markers (§5.2) ---------- */
+.phone {
+  position: relative;
+  flex: none;
+  width: var(--phone-w);
+}
+.phone img { width: 100%; height: auto; }
+
+.marker {
+  --scale: 1;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 24px; height: 24px;
+  margin: -12px 0 0 -12px;              /* positioned by its centre */
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--marker-ink);
+  box-shadow: 0 0 0 2px var(--bg), 0 1px 2px 2px var(--chip-shadow);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+.marker > span { position: relative; z-index: 1; }
+.marker::before {                          /* the pulse ring */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.marker::after {                           /* a finger-sized hit area */
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+}
+.marker:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.js .marker { opacity: 0; }                /* project.js pops them in with their figure */
+.js .marker.is-in { opacity: 1; }
+
+/* ---------- Notes ---------- */
+.notes { position: relative; display: flex; flex-direction: column; }
+.note {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  column-gap: 12px;
+  max-width: calc(360px + 28px);
+  margin-inline: -14px;                    /* text lines up with the column; padding is for the highlight */
+  padding: 12px 14px;
+}
+.note > svg.sq-shape .fill {
+  fill: var(--surface);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.note.is-lit > svg.sq-shape .fill { opacity: 1; }
+.note__badge {
+  width: 20px; height: 20px;
+  margin-top: 2px;                         /* centred on the title's first line */
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--marker-ink);
+  box-shadow: 0 0 0 2px var(--bg), 0 1px 2px 2px var(--chip-shadow);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.note__title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: var(--note-title-weight);
+  letter-spacing: var(--tracking-text);
+  color: var(--ink);
+}
+.note__body {
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 420;
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+
+/* ---------- Single phone + notes (§5.3) ---------- */
+.fig--single {
+  display: flex;
+  align-items: flex-start;
+  gap: 64px;
+}
+.fig--single .notes { flex: 1; max-width: 360px; }
+.fig--single .notes.is-aligned .note { position: absolute; left: 0; right: 0; }
+
+/* ---------- Phone rows (§5.3) ---------- */
+.fig--rows { display: flex; flex-direction: column; gap: var(--block-gap); }
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--block-gap) 80px;
+}
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.step__phones { display: flex; gap: 80px; }
+.step__label {
+  margin-top: 16px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight-strong);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+.step--pair .step__label { text-align: center; }
+.step .notes { margin-top: 12px; width: var(--phone-w); }
+.step--pair .notes { align-self: center; }
+.step__arrow {
+  position: absolute;
+  top: calc(var(--phone-w) * 1.0225 - 12px);   /* phone mid-height (images are 1 : 2.045) */
+  left: -52px;                                 /* centred in the 80px gap */
+  width: 24px; height: 24px;
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.step.is-row-start > .step__arrow { display: none; }
+
+/* ---------- Three principles ---------- */
+.principles {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--grid-gap);
+}
+.principles__num {
+  display: block;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+.principles__title {
+  margin-top: 12px;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: var(--tracking-text);
+  color: var(--ink);
+}
+.principles__body {
+  margin-top: 8px;
+  max-width: 340px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 420;
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+
+/* ---------- Homeproof timeline diagram (§5.4) ---------- */
+.timeline {
+  display: grid;
+  grid-template-columns: 1fr 32px 1fr 32px 1fr 32px 1fr 32px 1fr;
+  grid-template-rows: auto auto 40px auto;
+  align-items: stretch;
+}
+.timeline__bracket {                          /* a top line with two short ticks down */
+  grid-row: 1;
+  grid-column: 3 / 8;
+  position: relative;
+  align-self: end;
+  height: 8px;
+  margin: 32px 12% 16px;                      /* room for the label above */
+  border: 1px solid var(--ink-3);
+  border-bottom: 0;
+}
+.timeline__bracket span {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  padding: 0 12px 6px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: var(--meta-size-small);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+.timeline__box {
+  grid-row: 2;
+  position: relative;
+  padding: 16px 20px;
+  background: var(--surface);
+}
+.timeline__title {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.timeline__sub {
+  margin-top: 2px;
+  font-size: var(--meta-size-small);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+.timeline__box.tl-1 { grid-column: 1; }
+.timeline__box.tl-2 { grid-column: 3; }
+.timeline__box.tl-3 { grid-column: 5; }
+.timeline__box.tl-4 { grid-column: 7; }
+.timeline__box.tl-5 { grid-column: 9; }
+.timeline__arrow {
+  grid-row: 2;
+  align-self: center;
+  justify-self: center;
+  width: 16px; height: 16px;
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.tl-a1 { grid-column: 2; } .tl-a2 { grid-column: 4; } .tl-a3 { grid-column: 6; } .tl-a4 { grid-column: 8; }
+.timeline__link {
+  grid-row: 3 / 5;
+  justify-self: center;
+  position: relative;
+  z-index: 1;
+  width: 1px;
+  height: calc(40px + 12px);                 /* down to the dot inside the bar */
+  background: var(--line);
+  transform-origin: top;
+}
+.timeline__link::after {                     /* the 6px dot on the bar */
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  width: 6px; height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--line);
+}
+.timeline__link.tl-1 { grid-column: 1; }
+.timeline__link.tl-2 { grid-column: 3; }
+.timeline__link.tl-3 { grid-column: 5; }
+.timeline__link.tl-4 { grid-column: 7; }
+.timeline__link.tl-5 { grid-column: 9; }
+.timeline__rail { display: none; }
+.timeline__bar {
+  --squircle: 16;                            /* the panel radius; 6 (chip) when stacked, below */
+  grid-row: 4;
+  grid-column: 1 / -1;
+  padding: 26px 24px 20px;
+  background: var(--homeproof-green);        /* Homeproof green, both modes */
+  color: var(--on-green);
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: var(--tracking-small);
+}
+
+/* ---------- Entrance pre-states (project.js animates them in; visible without JS) ---------- */
+.js [data-enter]:not(.is-in),
+.js [data-reveal]:not(.is-in),
+.js [data-timeline]:not(.is-in) .timeline__box,
+.js [data-timeline]:not(.is-in) .timeline__arrow,
+.js [data-timeline]:not(.is-in) .timeline__bracket,
+.js [data-timeline]:not(.is-in) .timeline__bar,
+.js [data-timeline]:not(.is-in) .timeline__rail { opacity: 0; }
+.js [data-timeline]:not(.is-in) .timeline__link { transform: scaleY(0); }
+
+/* ---------- Tablet: principles keep three columns down to 900, then stack ---------- */
+@media (max-width: 899.98px) {
+  .principles { grid-template-columns: 1fr; gap: 40px; }
+}
+
+/* ---------- Mobile (< 768) ---------- */
+@media (max-width: 767.98px) {
+  .info-line { gap: 20px 40px; margin-top: 40px; }
+
+  .fig--single { flex-direction: column; align-items: center; gap: 24px; }
+  .fig--single .notes { width: var(--phone-w); flex: none; }
+
+  /* One phone per row with a ↓ between steps */
+  .row { flex-direction: column; align-items: center; gap: 0; }
+  .fig--rows { gap: 0; }
+  .step__phones { flex-direction: column; gap: 32px; }
+  .step { align-items: center; }
+  .step__label { align-self: stretch; text-align: left; width: var(--phone-w); }
+  .step--pair .step__label { text-align: left; }
+  .step + .step { margin-top: 48px; }
+  .row + .row > .step:first-child { margin-top: 48px; }
+  .step__arrow,
+  .step.is-row-start > .step__arrow {
+    display: block;
+    position: static;
+    margin: 0 0 24px;
+    transform: rotate(90deg);
+  }
+  .step:has(> .step__arrow) { margin-top: 24px !important; }
+
+}
+
+/* ---------- Timeline, stacked (narrow screens): no turned text. The boxes stack; a thin
+   green rail on their left keeps only the connection points; the bracket stands on the right
+   of boxes 2–4 with its label beside it; the bar's sentence becomes a green label under the
+   last box. ---------- */
+@media (max-width: 899.98px) {
+  .timeline {
+    max-width: 560px;
+    grid-template-columns: 12px 24px minmax(0, 1fr) 16px 76px;
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+  }
+  .timeline__box.tl-1 { grid-row: 1; } .timeline__box.tl-2 { grid-row: 3; } .timeline__box.tl-3 { grid-row: 5; }
+  .timeline__box.tl-4 { grid-row: 7; } .timeline__box.tl-5 { grid-row: 9; }
+  .timeline__box { grid-column: 3 !important; }
+  .tl-a1 { grid-row: 2; } .tl-a2 { grid-row: 4; } .tl-a3 { grid-row: 6; } .tl-a4 { grid-row: 8; }
+  .timeline__arrow { grid-column: 3 !important; margin: 8px 0; transform: rotate(90deg); }
+
+  .timeline__rail {                        /* thin green rail, a full pill (radius ≤ 4 stays plain) */
+    display: block;
+    grid-column: 1;
+    grid-row: 1 / 10;
+    justify-self: center;
+    width: 4px;
+    border-radius: 2px;
+    background: var(--homeproof-green);
+  }
+  .timeline__link {
+    grid-column: 1 / 3 !important;
+    align-self: center;
+    justify-self: end;
+    width: calc(24px + 6px);               /* from the box to the rail's centre */
+    height: 1px;
+    transform-origin: right;
+  }
+  .timeline__link::after {                 /* the connection point on the rail */
+    left: -4px; bottom: auto; top: -3.5px; margin: 0;
+    width: 8px; height: 8px;
+    background: var(--bg);
+    box-shadow: inset 0 0 0 2px var(--homeproof-green);
+  }
+  .timeline__link.tl-1 { grid-row: 1; } .timeline__link.tl-2 { grid-row: 3; } .timeline__link.tl-3 { grid-row: 5; }
+  .timeline__link.tl-4 { grid-row: 7; } .timeline__link.tl-5 { grid-row: 9; }
+  .js [data-timeline]:not(.is-in) .timeline__link { transform: scaleX(0); }
+
+  .timeline__bar {                         /* green label under the last box */
+    --squircle: 6;
+    grid-row: 10;
+    grid-column: 3 / 6;
+    justify-self: start;
+    margin-top: 16px;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  .timeline__bracket {
+    grid-column: 4;
+    grid-row: 3 / 8;
+    align-self: stretch;
+    width: 8px;
+    height: auto;
+    margin: 16px 0 16px 8px;
+    border: 1px solid var(--ink-3);
+    border-left: 0;
+  }
+  .timeline__bracket span {                /* horizontal small text beside the bracket */
+    left: 100%;
+    top: 50%;
+    bottom: auto;
+    width: 76px;
+    padding: 0 0 0 8px;
+    white-space: normal;
+    transform: translateY(-50%);
+  }
+}
+
+/* ---------- Reduced motion: markers highlight by a soft halo (opacity only), no scale or pulse ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .marker::before { transform: scale(1.6); transition: opacity 150ms ease; }
+  .marker.is-lit::before { opacity: .35; }
+  .back-link svg { transition: none; }
+  .back-link:hover svg { transform: none; }
+}
+
+/* ======================================================================
+   Step 4 additions: large images and video (§5.3), captions, recognition
+   line, exploded view with notes, disclaimer. The step 3 template above
+   is unchanged.
+   ====================================================================== */
+
+/* Recognition line under the info line (manhole cover) */
+.project-hero__recognition {
+  margin-top: 24px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+
+/* ---------- Large image / video: full content width, max 1200, radius 16 squircle ---------- */
+.fig--large { width: 100%; max-width: 1200px; }
+.shot { position: relative; width: 100%; }
+.shot img,
+.shot video { width: 100%; height: auto; }
+/* Video: its poster (the frame at 5.5s) is a normal lazy image sized for the screen; the video
+   lies on top of it, transparent until it has frames, and starts from that same frame (step 7). */
+.shot video { position: absolute; inset: 0; height: 100%; }
+.js .shot video:not(.is-ready) { opacity: 0; }   /* until it shows the start frame: never the dark intro */
+.caption {
+  margin-top: 16px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+
+/* Pause / play for the looping animation (it runs longer than 5 seconds). */
+.video-toggle {
+  position: absolute;
+  right: 16px; bottom: 16px;
+  width: 40px; height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--spring-press-dur) var(--spring-press), color 150ms ease;
+}
+.video-toggle > svg.sq-shape .fill { fill: var(--bg); }
+.video-toggle__icon { width: 20px; height: 20px; }
+.video-toggle__pause { fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; }
+.video-toggle__play { fill: currentColor; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
+.video-toggle:not(.is-paused) .video-toggle__play,
+.video-toggle.is-paused .video-toggle__pause { display: none; }
+@media (hover: hover) { .video-toggle:hover { color: var(--ink); } }
+.video-toggle:active { transform: scale(.96); }
+.video-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Exploded view + notes (manhole cover): the image at full content width; from 900
+   wide the notes sit in the image's empty right side, each lined up with its marker. ---------- */
+.fig--exploded { position: relative; width: 100%; max-width: 1200px; }
+/* The render sits on a light panel in both modes (Jack, step 4): manhole card tint #ECDFDA,
+   radius 16 squircle. The panel stays light in dark mode, so what sits on it (markers, and the
+   notes when they are beside the parts) uses the light-mode colours. */
+.exploded__panel {
+  overflow-x: clip;
+  background: var(--panel-manhole);
+}
+.exploded__panel,
+.fig--exploded .notes.is-aligned {
+  --ink: var(--ink-light);
+  --ink-2: var(--ink-2-light);
+  --ink-3: var(--ink-3-light);
+  --accent: var(--accent-light);
+  --bg: var(--panel-manhole);              /* the 2px ring around markers and badges */
+  --surface: var(--panel-manhole-lit);     /* note highlight, one step darker than the panel */
+  --marker-ink: var(--marker-ink-light);
+}
+/* Note badges stay identical to the markers on the panel, also when the notes sit below it. */
+.fig--exploded .note__badge { --accent: var(--accent-light); --marker-ink: var(--marker-ink-light); }
+.fig--exploded .notes {
+  position: absolute;
+  top: 0;
+  left: 72%;
+  width: min(360px, 28%);
+}
+.fig--exploded .notes.is-aligned .note { position: absolute; left: 0; right: 0; }
+@media (max-width: 899.98px) {
+  .fig--exploded .notes { position: static; width: auto; max-width: 360px; margin-top: 24px; }
+  /* Narrow screens: the render's wide transparent margins would leave the parts tiny, so the
+     image is shown larger with the parts centred (only empty margin falls outside the view;
+     the file is unchanged and the markers scale with it). Parts span x 34–70%, centre 52%. */
+  .fig--exploded { --k: 1.6; }
+  .fig--exploded .shot { width: calc(var(--k) * 100%); margin-left: calc((0.5 - 0.52 * var(--k)) * 100%); }
+}
+@media (max-width: 599.98px) {
+  .fig--exploded { --k: 2.2; }
+}
+
+/* ---------- Disclaimer (end of page): Inter 13, tertiary ---------- */
+.project-disclaimer { padding-bottom: 48px; }
+.project-disclaimer p {
+  max-width: 640px;
+  font-size: var(--meta-size-small);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-toggle { transition: color 150ms ease; }
+  .video-toggle:active { transform: none; }
+}

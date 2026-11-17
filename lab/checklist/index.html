@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checklist</title>
+<style>
+  @font-face {
+    font-family: "Inter";
+    src: url("fonts/inter-latin-wght-normal.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* Linen + Ember tokens (site-design-system.md §2) */
+  :root {
+    color-scheme: light;
+    --bg: #F5F3EF;
+    --surface: #ECE9E4;
+    --line: #DEDAD3;
+    --nav-selected: #E4E0D9;
+    --ink: #242424;
+    --ink-2: #575757;
+    --ink-3: #696969;
+    --accent: #C2410C;
+    --done-opacity: .7;   /* faded text still ≥ 4.5:1 on the row, also while hovered */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #161514;
+      --surface: #1F1E1C;
+      --line: #2C2A27;
+      --nav-selected: #2B2926;
+      --ink: #E6E6E6;
+      --ink-2: #B0B0B0;
+      --ink-3: #8C8C8C;
+      --accent: #FB8A5C;
+      --done-opacity: .6;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #161514;
+    --surface: #1F1E1C;
+    --line: #2C2A27;
+    --nav-selected: #2B2926;
+    --ink: #E6E6E6;
+    --ink-2: #B0B0B0;
+    --ink-3: #8C8C8C;
+    --accent: #FB8A5C;
+    --done-opacity: .6;
+  }
+
+  /* Spring easings are generated in JS; these are fallbacks. */
+  :root {
+    --spring-check: cubic-bezier(.3, 1.3, .5, 1);
+    --spring-check-dur: 520ms;
+    --spring-press: cubic-bezier(.3, 1.4, .5, 1);
+    --spring-press-dur: 360ms;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 25.6px;
+    font-weight: 420;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    transition: background-color 400ms ease, color 400ms ease;
+  }
+
+  .proto {
+    width: min(320px, 100%);
+    display: grid;
+    gap: 8px;
+  }
+
+  .label {
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 450;
+    color: var(--ink-3);
+    letter-spacing: -0.006em;
+    user-select: none;
+  }
+
+  /* Squircle shapes: element is clipped to the path, fill + border drawn on the same path. */
+  .sq { position: relative; isolation: isolate; }
+  .sq > svg.shape {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .sq > svg.shape path { transition: fill 400ms ease, stroke 400ms ease; }
+
+  /* List: rows are stacked by JS (translateY), so they can glide past each other. */
+  .list {
+    position: relative;
+    height: calc(5 * 52px + 4 * 8px);
+    margin: 0; padding: 0;
+    list-style: none;
+  }
+  .row {
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 52px;
+    z-index: 1;
+    will-change: transform;
+  }
+  .row.is-front { z-index: 2; }
+
+  .item {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    margin: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--spring-press-dur) var(--spring-press);
+  }
+  .item:active { transform: scale(.98); transition-duration: 120ms; transition-timing-function: ease-out; }
+  .item:focus { outline: none; }
+  .item > svg.shape .fill  { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+  .item > svg.shape .hover { fill: var(--nav-selected); stroke: var(--line); stroke-width: 2; opacity: 0; transition: opacity 120ms ease, fill 400ms ease, stroke 400ms ease; }
+  .item > svg.shape .ring  { fill: none; stroke: var(--accent); stroke-width: 4; opacity: 0; }
+  @media (hover: hover) {
+    .item:hover > svg.shape .hover { opacity: 1; }
+    .item:hover .box .ring { stroke: var(--ink); }
+  }
+  .item:focus-visible > svg.shape .ring { opacity: 1; }
+
+  /* Check box: circle outline; checked = solid circle springs in, check mark pops in on it. */
+  .box { width: 20px; height: 20px; flex: none; overflow: visible; display: block; }
+  .box .ring  { fill: none; stroke: var(--ink-3); stroke-width: 1.6; transition: stroke 400ms ease; }
+  .box .solid { fill: var(--ink); transition: fill 400ms ease; }
+  .box .tick  { fill: none; stroke: var(--surface); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .box .solid, .box .tick {
+    transform-box: view-box;
+    transform-origin: 10px 10px;
+    transition:
+      transform var(--spring-check-dur) var(--spring-check),
+      opacity 200ms ease,
+      fill 400ms ease, stroke 400ms ease;
+  }
+  .row:not(.is-done) .box .solid { transform: scale(0); opacity: 0; }
+  .row:not(.is-done) .box .tick  { transform: scale(.4); opacity: 0; }
+  .row.is-done .box .solid { transform: none; opacity: 1; }
+  .row.is-done .box .tick  { transform: none; opacity: 1; }
+
+  /* Text: strike line grows from the left; text fades. */
+  .text {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+    transition: opacity 300ms ease;
+  }
+  .strike {
+    position: absolute;
+    left: -2px; right: -2px;
+    top: 50%;
+    height: 1.5px;
+    margin-top: -0.25px;
+    background: currentColor;
+    transform-origin: 0 50%;
+    transition: transform var(--spring-check-dur) var(--spring-check);
+  }
+  .row:not(.is-done) .strike { transform: scaleX(0); }
+  .row.is-done .strike { transform: none; }
+  .row.is-done .text { opacity: var(--done-opacity); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .box .solid, .box .tick, .strike, .item { transition: opacity 150ms ease !important; }
+    .row:not(.is-done) .box .solid,
+    .row:not(.is-done) .box .tick { transform: none; }
+    .row:not(.is-done) .strike { transform: none; opacity: 0; }
+    .row.is-done .strike { opacity: 1; }
+    .text { transition-duration: 150ms; }
+    .item:active { transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="proto" id="proto">
+    <span class="label" id="list-label">To-do</span>
+    <ul class="list" id="list" aria-labelledby="list-label"></ul>
+  </div>
+
+<script>
+(() => {
+  const TASKS = ["Water the plants", "Buy groceries", "Reply to emails", "Go for a run", "Call Mom"];
+  const ROW_H = 52, GAP = 8, STEP = ROW_H + GAP;
+  const MOVE_DELAY = 180;                 // ms: let the check land before the row travels
+  const root = document.documentElement;
+  const list = document.getElementById("list");
+
+  // Theme: ?theme=light|dark overrides the system setting (the Lab page can also set data-theme).
+  const qTheme = new URLSearchParams(location.search).get("theme");
+  if (qTheme === "light" || qTheme === "dark") root.dataset.theme = qTheme;
+
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+  // ---------- Spring easings as CSS linear() (same generator as password-eye) ----------
+  function springLinear(response, damping) {
+    const w = 2 * Math.PI / response;
+    const wd = w * Math.sqrt(1 - damping * damping);
+    const x = t => 1 - Math.exp(-damping * w * t) * (Math.cos(wd * t) + (damping * w / wd) * Math.sin(wd * t));
+    const dur = Math.log(1000) / (damping * w);
+    const n = 48, pts = [];
+    for (let i = 0; i <= n; i++) pts.push(+x(dur * i / n).toFixed(4));
+    pts[n] = 1;
+    return { easing: `linear(${pts.join(", ")})`, ms: Math.round(dur * 1000) };
+  }
+  if (CSS.supports("transition-timing-function", "linear(0, 1)")) {
+    const check = springLinear(0.42, 0.72);
+    const press = springLinear(0.3, 0.6);
+    root.style.setProperty("--spring-check", check.easing);
+    root.style.setProperty("--spring-check-dur", check.ms + "ms");
+    root.style.setProperty("--spring-press", press.easing);
+    root.style.setProperty("--spring-press-dur", press.ms + "ms");
+  }
+
+  // ---------- Squircle (site-design-system.md §2) ----------
+  function squircle(w, h, r, s = 0.6) {
+    const rad = d => d * Math.PI / 180, f = v => +v.toFixed(3);
+    const p = (1 + s) * r;
+    if (p > Math.min(w, h) / 2) throw new Error("too small for 60% smoothing: " + w + "x" + h + " r" + r);
+    const am = 90 * (1 - s), L = Math.sin(rad(am / 2)) * r * Math.SQRT2;
+    const p34 = r * Math.tan(rad((90 - am) / 4)), beta = 45 * s;
+    const c = p34 * Math.cos(rad(beta)), d = c * Math.tan(rad(beta));
+    const b = (p - L - c - d) / 3, a = 2 * b;
+    const A=f(a),AB=f(a+b),ABC=f(a+b+c),BC=f(b+c),C=f(c),D=f(d),R=f(r),l=f(L);
+    return [`M ${f(w-p)} 0`,`c ${A} 0 ${AB} 0 ${ABC} ${D}`,`a ${R} ${R} 0 0 1 ${l} ${l}`,`c ${D} ${C} ${D} ${BC} ${D} ${ABC}`,
+      `L ${w} ${f(h-p)}`,`c 0 ${A} 0 ${AB} ${-D} ${ABC}`,`a ${R} ${R} 0 0 1 ${-l} ${l}`,`c ${-C} ${D} ${-BC} ${D} ${-ABC} ${D}`,
+      `L ${f(p)} ${h}`,`c ${-A} 0 ${-AB} 0 ${-ABC} ${-D}`,`a ${R} ${R} 0 0 1 ${-l} ${-l}`,`c ${-D} ${-C} ${-D} ${-BC} ${-D} ${-ABC}`,
+      `L 0 ${f(p)}`,`c 0 ${-A} 0 ${-AB} ${D} ${-ABC}`,`a ${R} ${R} 0 0 1 ${l} ${-l}`,`c ${C} ${-D} ${BC} ${-D} ${ABC} ${-D}`,`Z`].join(" ");
+  }
+  function shapeSquircle(el) {
+    const w = el.offsetWidth, h = el.offsetHeight, r = +el.dataset.radius;
+    if (!w || !h) return;
+    const d = squircle(w, h, r);
+    el.style.clipPath = `path("${d}")`;
+    const svg = el.querySelector(":scope > svg.shape");
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.querySelectorAll("path").forEach(p => p.setAttribute("d", d));
+  }
+  const ro = new ResizeObserver(entries => entries.forEach(e => shapeSquircle(e.target)));
+
+  // ---------- Build rows ----------
+  const items = TASKS.map((label, i) => {
+    const li = document.createElement("li");
+    li.className = "row";
+    li.innerHTML = `
+      <button class="item sq" data-radius="8" type="button" role="checkbox" aria-checked="false">
+        <svg class="shape" aria-hidden="true"><path class="fill"/><path class="hover"/><path class="ring"/></svg>
+        <svg class="box" viewBox="0 0 20 20" aria-hidden="true">
+          <circle class="ring" cx="10" cy="10" r="9.2"/>
+          <circle class="solid" cx="10" cy="10" r="10"/>
+          <path class="tick" d="M6 10.3L8.7 13L14.1 7.4"/>
+        </svg>
+        <span class="text">${label}<span class="strike" aria-hidden="true"></span></span>
+      </button>`;
+    list.appendChild(li);
+    const btn = li.firstElementChild;
+    shapeSquircle(btn); ro.observe(btn);
+    const it = { i, li, btn, done: false, doneAt: 0, y: i * STEP, v: 0, target: i * STEP };
+    li.style.transform = `translateY(${it.y}px)`;
+    btn.addEventListener("click", () => toggle(it));
+    return it;
+  });
+
+  // ---------- Order: unchecked in original order on top, checked below in the order they were checked ----------
+  function order() {
+    const open = items.filter(t => !t.done).sort((a, b) => a.i - b.i);
+    const done = items.filter(t => t.done).sort((a, b) => a.doneAt - b.doneAt);
+    return open.concat(done);
+  }
+
+  let stamp = 0, moveTimer = 0;
+  function toggle(it) {
+    it.done = !it.done;
+    it.doneAt = it.done ? ++stamp : 0;
+    it.li.classList.toggle("is-done", it.done);
+    it.btn.setAttribute("aria-checked", String(it.done));
+    items.forEach(t => t.li.classList.toggle("is-front", t === it));
+    clearTimeout(moveTimer);
+    moveTimer = setTimeout(relayout, reduceMotion.matches ? 0 : MOVE_DELAY);
+  }
+
+  function relayout() {
+    const next = order();
+    // Keep the DOM (and Tab order) in visual order without ever moving the focused row,
+    // so keyboard focus is not lost.
+    const focused = items.find(t => t.li.contains(document.activeElement));
+    if (focused) {
+      const k = next.indexOf(focused);
+      next.slice(0, k).forEach(t => list.insertBefore(t.li, focused.li));
+      next.slice(k + 1).forEach(t => list.appendChild(t.li));
+    } else {
+      next.forEach(t => list.appendChild(t.li));
+    }
+    next.forEach((t, idx) => {
+      const y = idx * STEP;
+      if (t.target === y) return;
+      t.target = y;
+      if (reduceMotion.matches) {
+        t.y = y; t.v = 0;
+        t.li.style.transform = `translateY(${y}px)`;
+        t.li.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: "ease" });
+      }
+    });
+    if (!reduceMotion.matches) kick();
+  }
+
+  // ---------- Row travel: one spring per row, interruptible (keeps position and velocity) ----------
+  const MOVE_RESPONSE = 0.5, MOVE_DAMPING = 0.8;
+  const K = (2 * Math.PI / MOVE_RESPONSE) ** 2;
+  const C = 2 * MOVE_DAMPING * Math.sqrt(K);
+  let raf = 0, last = 0;
+  function step(t) {
+    // Real elapsed time, integrated in small sub-steps: the spring keeps its timing
+    // even if the browser delivers frames slowly.
+    const dt = Math.min(0.5, Math.max(0, (t - last) / 1000) || 0.016);
+    last = t;
+    const n = Math.max(1, Math.ceil(dt / 0.004));
+    let moving = false;
+    for (const it of items) {
+      if (it.y === it.target && it.v === 0) continue;
+      for (let s = 0; s < n; s++) {
+        const h = dt / n;
+        const f = -K * (it.y - it.target) - C * it.v;
+        it.v += f * h;
+        it.y += it.v * h;
+      }
+      if (Math.abs(it.y - it.target) < 0.05 && Math.abs(it.v) < 0.5) { it.y = it.target; it.v = 0; }
+      else moving = true;
+      it.li.style.transform = `translateY(${it.y.toFixed(2)}px)`;
+    }
+    raf = moving ? requestAnimationFrame(step) : 0;
+  }
+  function kick() {
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+  }
+})();
+</script>
+</body>
+</html>

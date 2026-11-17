@@ -1,0 +1,158 @@
+/* Global tokens (site-design-system.md §2, §8). Every page loads this file first. */
+
+/* ---------- Fonts: self-hosted WOFF2, licences beside them in /assets/fonts ---------- */
+@font-face {
+  font-family: "Cal Sans";
+  src: url("/assets/fonts/cal-sans-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/assets/fonts/inter-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- Colour tokens are registered as colours so a theme switch can cross-fade them ---------- */
+@property --bg           { syntax: "<color>"; inherits: true; initial-value: #F5F3EF; }
+@property --surface      { syntax: "<color>"; inherits: true; initial-value: #ECE9E4; }
+@property --line         { syntax: "<color>"; inherits: true; initial-value: #DEDAD3; }
+@property --nav-selected { syntax: "<color>"; inherits: true; initial-value: #E4E0D9; }
+@property --ink          { syntax: "<color>"; inherits: true; initial-value: #242424; }
+@property --ink-2        { syntax: "<color>"; inherits: true; initial-value: #575757; }
+@property --ink-3        { syntax: "<color>"; inherits: true; initial-value: #696969; }
+@property --accent       { syntax: "<color>"; inherits: true; initial-value: #C2410C; }
+@property --card-ventari       { syntax: "<color>"; inherits: true; initial-value: #DCE6E7; }
+@property --card-clasp         { syntax: "<color>"; inherits: true; initial-value: #E7E3D6; }
+@property --card-homeproof     { syntax: "<color>"; inherits: true; initial-value: #D9E6E0; }
+@property --card-manhole-cover { syntax: "<color>"; inherits: true; initial-value: #ECDFDA; }
+
+:root {
+  /* ----- Linen + Ember, light ----- */
+  color-scheme: light;
+  --bg: #F5F3EF;
+  --surface: #ECE9E4;
+  --line: #DEDAD3;
+  --nav-selected: #E4E0D9;
+  --ink: #242424;
+  --ink-2: #575757;
+  --ink-3: #696969;
+  --accent: #C2410C;
+
+  /* Project card tints (option A "Soft") */
+  --card-ventari: #DCE6E7;
+  --card-clasp: #E7E3D6;
+  --card-homeproof: #D9E6E0;
+  --card-manhole-cover: #ECDFDA;
+
+  /* ----- Fixed colours used by single components (values from the spec; same in both modes
+     unless the dark block below changes them). Collected here in step 7 (Hallmark Floor 48). ----- */
+  --marker-ink: #FFFFFF;                    /* number on markers and note badges (§5.2) */
+  --chip-shadow: rgb(0 0 0 / .18);          /* markers, badges, card tags */
+  --homeproof-green: #1F7A6A;               /* timeline bar, rail and points (§5.4) */
+  --on-green: #FFFFFF;                      /* text on the timeline bar */
+  --panel-manhole: #ECDFDA;                 /* exploded-view panel (§5.3) */
+  --panel-manhole-lit: #E3D4CE;             /* note highlight on that panel */
+  --ink-light: #242424;                     /* light-mode colours, kept on the light panel */
+  --ink-2-light: #575757;
+  --ink-3-light: #696969;
+  --accent-light: #C2410C;
+  --marker-ink-light: #FFFFFF;
+  --card-shadow-near: rgb(0 0 0 / .06);     /* lifted card (§4.2) */
+  --card-shadow-far: rgb(0 0 0 / .12);
+  --tag-ring: rgb(255 255 255 / .18);       /* ring outside the card tags (§4.2.1) */
+  --lens-outline: #FFFFFF;                  /* "View" magnifier outline and shadow (§4.2) */
+  --lens-shadow: rgb(0 0 0 / .28);
+
+  /* 0 in light, 1 in dark: lets CSS morph things (the theme toggle) with the theme */
+  --is-dark: 0;
+
+  /* Page colours change with the theme on the same spring as the toggle icon, so both
+     arrive in the same moment. The colours use the flat curve: they follow the spring
+     until it first reaches its target and stay there (colours do not bounce). */
+  --theme-dur: var(--spring-state-dur);
+  --theme-ease: var(--spring-state-flat);
+  transition:
+    --bg var(--theme-dur) var(--theme-ease), --surface var(--theme-dur) var(--theme-ease), --line var(--theme-dur) var(--theme-ease),
+    --nav-selected var(--theme-dur) var(--theme-ease), --ink var(--theme-dur) var(--theme-ease), --ink-2 var(--theme-dur) var(--theme-ease),
+    --ink-3 var(--theme-dur) var(--theme-ease), --accent var(--theme-dur) var(--theme-ease),
+    --card-ventari var(--theme-dur) var(--theme-ease), --card-clasp var(--theme-dur) var(--theme-ease),
+    --card-homeproof var(--theme-dur) var(--theme-ease), --card-manhole-cover var(--theme-dur) var(--theme-ease);
+
+  /* ----- Type ----- */
+  --font-display: "Cal Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --tracking-text: -0.011em;     /* Inter, slightly negative (as in the Lab prototypes) */
+  --tracking-small: -0.006em;    /* Inter at 13–15px */
+  --tracking-display: -0.02em;         /* Cal Sans: page titles, large statements, major headings */
+  --tracking-display-small: -0.01em;   /* Cal Sans: name in the nav, minor headings */
+
+  /* Role: size, line height, weight (desktop reference at 1440; display sizes are fluid) */
+  --name-size: 24px;        --name-lh: 24px;         --name-weight: 400;
+  --nav-size: 15px;         --nav-lh: 23px;          --nav-weight: 450;   --nav-weight-selected: 500;
+  --hero-size: clamp(44px, calc(32px + 4.4444vw), 96px);                  /* 96 at 1440, 68 at 810 */
+  --hero-lh: 1.04;
+  --h2-major-size: clamp(28px, calc(14.571px + 1.9048vw), 42px);          /* 42 at 1440, 30 at 810 */
+  --h2-minor-size: clamp(24px, calc(10.667px + 1.4815vw), 32px);          /* 32 at 1440, 22.7 at 810 */
+  --heading-lh: 1.1;
+  --lead-size: 18px;        --lead-lh: 28.8px;       --lead-weight: 420;
+  --body-size: 16px;        --body-lh: 25.6px;       --body-weight: 420;
+  --meta-size: 15px;        --meta-size-small: 13px; --meta-lh: 1.5;
+  --meta-weight: 420;       --meta-weight-strong: 450;
+  --button-size: 14px;      --button-lh: 20px;       --button-weight: 500;
+  --emphasis-weight: 540;
+  --note-title-weight: 500;
+
+  /* ----- Spacing and pacing ----- */
+  --nav-h: 64px;
+  --content-max: 1280px;                                  /* includes the side gutters */
+  --gutter: clamp(20px, 5vw, 40px);                       /* 40 from 800 wide up */
+  --section-gap: clamp(80px, 10vw, 144px);                /* 144 at 1440 */
+  --grid-gap: clamp(20px, 2.2223vw, 32px);                /* 32 at 1440 */
+  --footer-h: clamp(176px, 17.0139vw, 245px);             /* 245 at 1440 */
+
+  /* ----- Radius tiers (all drawn as 60% squircles by /assets/js/squircle.js) ----- */
+  --radius-panel: 16;
+  --radius-icon-button: 12;
+  --radius-control: 8;
+  --radius-chip: 6;
+
+  /* ----- Spring tokens (§8). These are fallbacks; /assets/js/spring.js replaces them
+     with exact spring curves generated from response / damping. ----- */
+  --spring-press: cubic-bezier(.3, 1.4, .5, 1);    --spring-press-dur: 550ms;
+  --spring-state: cubic-bezier(.3, 1.3, .5, 1);    --spring-state-dur: 641ms;
+  --spring-state-flat: cubic-bezier(.3, 1, .5, 1);
+  --spring-travel: cubic-bezier(.25, 1.15, .4, 1); --spring-travel-dur: 687ms;
+  --spring-enter: cubic-bezier(.2, .9, .3, 1);     --spring-enter-dur: 672ms;
+}
+
+/* ----- Linen + Ember, dark: only when the visitor chose it (light is the default) ----- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #161514;
+  --surface: #1F1E1C;
+  --line: #2C2A27;
+  --nav-selected: #2B2926;
+  --ink: #E6E6E6;
+  --ink-2: #B0B0B0;
+  --ink-3: #8C8C8C;
+  --accent: #FB8A5C;
+  --card-ventari: #1C2527;
+  --card-clasp: #25241E;
+  --card-homeproof: #1B2622;
+  --card-manhole-cover: #2A201E;
+  --marker-ink: #161514;
+  --card-shadow-near: rgb(0 0 0 / .35);
+  --card-shadow-far: rgb(0 0 0 / .5);
+  --lens-outline: rgb(0 0 0 / .6);
+  --lens-shadow: rgb(0 0 0 / .4);
+  --is-dark: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --theme-dur: 200ms; --theme-ease: ease; }
+}

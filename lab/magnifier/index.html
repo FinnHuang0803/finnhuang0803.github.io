@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magnifier</title>
+<style>
+  /* Theme tokens: the Lab page hands these over live during a theme switch (§6). */
+  :root {
+    color-scheme: light;
+    --bg: #F5F3EF;
+    --ink: #242424;
+    --ink-2: #575757;
+    --ink-3: #696969;
+    --accent: #C2410C;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #161514;
+      --ink: #E6E6E6;
+      --ink-2: #B0B0B0;
+      --ink-3: #8C8C8C;
+      --accent: #FB8A5C;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #161514;
+    --ink: #E6E6E6;
+    --ink-2: #B0B0B0;
+    --ink-3: #8C8C8C;
+    --accent: #FB8A5C;
+  }
+  :root {
+    --spring-ui: cubic-bezier(.3, 1.25, .5, 1);
+    --spring-ui-dur: 520ms;
+    --ui-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+    --read-font: Georgia, "Times New Roman", serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    transition: background-color 400ms ease, color 400ms ease;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    padding: 68px 24px 24px;
+  }
+  html.lens-cursor, html.lens-cursor * { cursor: none !important; }
+
+  /* The passage: text only, no paper. */
+  .passage {
+    position: relative;
+    z-index: 0;
+    width: min(700px, 100%);         /* room for the lens to travel along a line (Jack, 2026-11-17) */
+    margin: 0;
+    font-family: var(--read-font);
+    font-size: 18px;
+    line-height: 28.8px;
+    text-align: justify;
+    hyphens: manual;
+    color: var(--ink);
+    transition: color 400ms ease;
+  }
+  html.mag-on .passage { user-select: none; -webkit-user-select: none; }
+  .w { white-space: nowrap; transition: opacity 220ms ease; }
+  .passage.dimming .w:not(.cur) { opacity: .22; }
+
+  canvas.glass {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* ---------- Toolbar (top right) ---------- */
+  .toolbar {
+    position: absolute;
+    z-index: 2;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--ui-font);
+    font-size: 13px;
+    line-height: 1.3;
+    letter-spacing: -0.006em;
+    color: var(--ink-2);
+  }
+  .mag-btn {
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    padding: 0; margin: 0; border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 150ms ease, color 150ms ease, transform var(--spring-ui-dur) var(--spring-ui);
+  }
+  .mag-btn:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .mag-btn:active { transform: scale(.9); transition-duration: 120ms, 120ms, 120ms; transition-timing-function: ease-out; }
+  .mag-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .mag-btn svg { width: 20px; height: 20px; display: block; }
+  .mag-btn svg * { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .mag-btn:focus { outline: none; }
+  .mag-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .extras {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 16px;
+    opacity: 0;
+    transform: translateX(10px);
+    pointer-events: none;
+    transition: opacity 180ms ease, transform var(--spring-ui-dur) var(--spring-ui);
+  }
+  html.mag-on .extras { opacity: 1; transform: none; pointer-events: auto; }
+
+  .size { display: flex; align-items: center; gap: 6px; }
+  .size .dot { display: block; border-radius: 50%; border: 1.5px solid var(--ink-3); flex: none; }
+  .size .dot.s { width: 7px; height: 7px; }
+  .size .dot.l { width: 12px; height: 12px; }
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 84px; height: 28px; margin: 0;
+    background: transparent;
+    cursor: default;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px; border-radius: 2px;
+    background: color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+  input[type="range"]::-moz-range-track {
+    height: 4px; border-radius: 2px;
+    background: color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; margin-top: -7px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgb(0 0 0 / .32), 0 0 0 .5px rgb(0 0 0 / .1);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border: 0;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgb(0 0 0 / .32), 0 0 0 .5px rgb(0 0 0 / .1);
+  }
+  input[type="range"]:focus { outline: none; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+  .switch {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 2px; margin: 0; border: 0;
+    background: none;
+    font: inherit; color: var(--ink-2);
+    cursor: default;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .switch:hover { color: var(--ink); }
+  .switch:focus { outline: none; }
+  .switch:focus-visible .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .track {
+    position: relative;
+    width: 34px; height: 20px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--ink) 18%, transparent);
+    transition: background-color 200ms ease;
+    flex: none;
+  }
+  .knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 1px 2px rgb(0 0 0 / .3);
+    transition: transform var(--spring-ui-dur) var(--spring-ui);
+  }
+  .switch[aria-checked="true"] .track { background: var(--ink); }
+  .switch[aria-checked="true"] .knob { transform: translateX(14px); background: var(--bg); }
+
+  /* Live preview of the lens size, under the slider while it is used. */
+  .preview {
+    position: absolute;
+    z-index: 3;
+    top: 0; left: 0;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(.9);
+    transform-origin: 50% 0;
+    background: color-mix(in srgb, var(--bg) 70%, #FFFFFF);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / .9),
+      inset 0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent),
+      0 6px 16px rgb(0 0 0 / .14);
+    transition:
+      opacity 160ms ease,
+      transform var(--spring-ui-dur) var(--spring-ui),
+      width var(--spring-ui-dur) var(--spring-ui),
+      height var(--spring-ui-dur) var(--spring-ui),
+      left var(--spring-ui-dur) var(--spring-ui),
+      border-radius var(--spring-ui-dur) var(--spring-ui);
+  }
+  :root[data-theme="dark"] .preview { background: color-mix(in srgb, var(--bg) 92%, #FFFFFF); box-shadow: inset 0 1px 0 rgb(255 255 255 / .25), inset 0 0 0 1px rgb(255 255 255 / .1), 0 6px 16px rgb(0 0 0 / .5); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .preview { background: color-mix(in srgb, var(--bg) 92%, #FFFFFF); box-shadow: inset 0 1px 0 rgb(255 255 255 / .25), inset 0 0 0 1px rgb(255 255 255 / .1), 0 6px 16px rgb(0 0 0 / .5); }
+  }
+  .preview.show { opacity: 1; transform: none; }
+  /* The exact magnification while adjusting, so a stronger lens covering fewer words makes sense. */
+  .preview { display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--ui-font); letter-spacing: -0.006em; white-space: nowrap; }
+  .pv-m { font-size: 17px; line-height: 1; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .pv-n { font-size: 13px; line-height: 1; font-weight: 450; color: var(--ink-3); }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mag-btn, .extras, .knob, .preview { transition-property: opacity, background-color, color !important; transition-duration: 150ms !important; }
+    .extras, .preview { transform: none; }
+    .mag-btn:active { transform: none; }
+  }
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <div class="toolbar" id="toolbar">
+    <button class="mag-btn" id="magBtn" type="button" aria-pressed="false" aria-label="Magnifier">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.6"/><path d="M12.8 12.8L17 17"/></svg>
+    </button>
+    <div class="extras" id="extras" inert>
+      <div class="size" id="sizeWrap">
+        <span class="dot s" aria-hidden="true"></span>
+        <input type="range" id="size" min="0" max="2" step="1" value="1" aria-label="Magnification" aria-valuetext="1.65×, 3 words">
+        <span class="dot l" aria-hidden="true"></span>
+      </div>
+      <button class="switch" id="dim" type="button" role="switch" aria-checked="false">
+        <span>Dim other lines</span>
+        <span class="track" aria-hidden="true"><span class="knob"></span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Herman Melville, Moby-Dick (1851 US edition), Chapter 1 "Loomings", third paragraph. Public domain. -->
+  <p class="passage" id="passage">Circumambulate the city of a dreamy Sabbath afternoon. Go from Corlears Hook to Coenties Slip, and from thence, by Whitehall, northward. What do you see?—Posted like silent sentinels all around the town, stand thousands upon thousands of mortal men fixed in ocean reveries. Some leaning against the spiles; some seated upon the pier-heads; some looking over the bulwarks of ships from China; some high aloft in the rigging, as if striving to get a still better seaward peep. But these are all landsmen; of week days pent up in lath and plaster—tied to counters, nailed to benches, clinched to desks. How then is this? Are the green fields gone? What do they here?</p>
+
+  <canvas class="glass" id="glass" aria-hidden="true"></canvas>
+  <div class="preview" id="preview" aria-hidden="true"><span class="pv-m" id="pvM">1.65×</span><span class="pv-n" id="pvN">3 words</span></div>
+  <div class="sr-only" id="live" aria-live="polite"></div>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // ===================================================================
+  // Setup
+  // ===================================================================
+  const root = document.documentElement;
+  const qTheme = new URLSearchParams(location.search).get("theme");
+  if (qTheme === "light" || qTheme === "dark") root.dataset.theme = qTheme;
+  const RM = matchMedia("(prefers-reduced-motion: reduce)");
+
+  const stage = document.getElementById("stage");
+  const toolbar = document.getElementById("toolbar");
+  const magBtn = document.getElementById("magBtn");
+  const extras = document.getElementById("extras");
+  const sizeEl = document.getElementById("size");
+  const sizeWrap = document.getElementById("sizeWrap");
+  const dimBtn = document.getElementById("dim");
+  const passage = document.getElementById("passage");
+  const canvas = document.getElementById("glass");
+  const previewEl = document.getElementById("preview");
+  const live = document.getElementById("live");
+
+  // Spring easing for the small UI parts (response 0.42s, damping 0.72).
+  (function springCss() {
+    if (!CSS.supports("transition-timing-function", "linear(0, 1)")) return;
+    const r = 0.42, z = 0.72, w = 2 * Math.PI / r, wd = w * Math.sqrt(1 - z * z);
+    const x = t => 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t));
+    const dur = Math.log(1000) / (z * w), pts = [];
+    for (let i = 0; i <= 48; i++) pts.push(+x(dur * i / 48).toFixed(4));
+    pts[48] = 1;
+    root.style.setProperty("--spring-ui", `linear(${pts.join(", ")})`);
+    root.style.setProperty("--spring-ui-dur", Math.round(dur * 1000) + "ms");
+  })();
+
+  // ===================================================================
+  // Lens constants
+  // ===================================================================
+  const FONT = 18;                 // passage font size (px)
+  const PITCH = 28.8;              // line height (px)
+  const READ_FONT = getComputedStyle(root).getPropertyValue("--read-font").trim() || "Georgia, serif";
+  const STOPS = [                  // slider sets magnification; to the right: stronger, fewer words,
+    { n: 4, M: 1.4 },              // so the lens keeps roughly the same width (Jack, 2026-11-17)
+    { n: 3, M: 1.65 },
+    { n: 2, M: 1.9 },
+  ];
+  const M_MAX = 1.9;
+  const RIM = 8;                   // rim zone width (px)
+  const RAMP = 22;                 // transition zone at 1.65×, natural px on each side of the plateau
+  const PAD = 3;                   // plateau padding around the focus words, natural px
+  const INNER_H = 1.34;            // inner text area height, in magnified font sizes
+  const CORNER = 0.4;              // corner radius, share of lens height
+  const HYST = 9;                  // line-change margin past the midpoint between lines (px): a switch
+                                   // needs 23.4 of the 28.8px line spacing (Jack, 2026-11-17)
+  const GROUP_SNAP = 0.6;          // word-group snap strength (0 = none, 1 = hard). Line snap is full.
+  const EDGE = 6;                  // lens keeps this far inside the card
+
+  // ===================================================================
+  // Words and lines
+  // ===================================================================
+  const TEXT = passage.textContent.trim();
+  const allWords = [];
+  let words = allWords;            // the words shown (a narrow card may show fewer sentences)
+  let sentence = 0;
+  passage.textContent = "";
+  TEXT.split(/\s+/).forEach((chunk, i) => {
+    if (i) passage.appendChild(document.createTextNode(" "));
+    // Words joined by an em dash ("see?—Posted") are two words.
+    chunk.split(/(?<=—)/).forEach(tok => {
+      const el = document.createElement("span");
+      el.className = "w";
+      el.textContent = tok;
+      passage.appendChild(el);
+      allWords.push({ el, text: tok, sent: sentence, qual: (tok.match(/[A-Za-z]/g) || []).length >= 3 });
+      if (/[.?!]["”’)]?—?$/.test(tok)) sentence++;
+    });
+  });
+
+  // A narrow card (tablet, phone) cannot hold the whole paragraph in its 520px stage: the
+  // passage then ends at the last whole sentence that fits. Wider cards show all of it.
+  function fitPassage() {
+    allWords.forEach(w => { w.el.hidden = false; });
+    const room = stage.clientHeight - 68 - 24;
+    let last = allWords[allWords.length - 1].sent;
+    while (passage.offsetHeight > room && last > 0) {
+      last--;
+      allWords.forEach(w => { w.el.hidden = w.sent > last; });
+    }
+    allWords.forEach(w => { if (w.el.hidden) w.el.classList.remove("cur"); });
+    words = allWords.filter(w => !w.el.hidden);
+  }
+
+  let lines = [];                  // { words:[], mid, top, bot, wins:{2:[],3:[],4:[]} }
+  let textRect = null;             // passage rect in stage coordinates
+  let stageW = 0, stageH = 0;
+  let avgH = { 2: 40, 3: 60, 4: 80 };        // typical focus-group half width (natural)
+  let avgHalf = { 2: 90, 3: 120, 4: 150 };   // typical inner half width (screen)
+
+  const mctx = document.createElement("canvas").getContext("2d");
+  function fontMetrics() {
+    mctx.font = `${FONT}px ${READ_FONT}`;
+    const m = mctx.measureText("x");
+    return {
+      asc: m.fontBoundingBoxAscent || FONT * 0.92,
+      xh: m.actualBoundingBoxAscent || FONT * 0.48,
+    };
+  }
+
+  function measure() {
+    const sr = stage.getBoundingClientRect();
+    stageW = sr.width; stageH = sr.height;
+    const pr = passage.getBoundingClientRect();
+    textRect = { l: pr.left - sr.left, t: pr.top - sr.top, r: pr.right - sr.left, b: pr.bottom - sr.top };
+    const fm = fontMetrics();
+    lines = [];
+    let cur = null;
+    words.forEach((w, i) => {
+      const r = w.el.getBoundingClientRect();
+      w.a = r.left - sr.left;
+      w.b = r.right - sr.left;
+      w.base = r.top - sr.top + fm.asc;
+      if (!cur || Math.abs(w.base - cur.base) > 4) {
+        cur = { words: [], base: w.base };
+        lines.push(cur);
+      }
+      w.line = lines.length - 1;
+      cur.words.push(w);
+    });
+    for (const L of lines) {
+      L.mid = L.base - fm.xh / 2;
+      L.top = L.mid - PITCH / 2;
+      L.bot = L.mid + PITCH / 2;
+      L.wins = {};
+      const q = L.words.filter(w => w.qual);
+      for (const { n } of STOPS) {
+        const list = [];
+        if (q.length >= n) {
+          for (let i = 0; i + n <= q.length; i++) list.push(win(L, q[i], q[i + n - 1]));
+        } else if (q.length) {
+          list.push(win(L, q[0], q[q.length - 1]));
+        } else {
+          list.push(win(L, L.words[0], L.words[L.words.length - 1]));
+        }
+        L.wins[n] = list;
+      }
+    }
+    // Segments along each line: words, and the gaps between them.
+    mctx.font = `${FONT}px ${READ_FONT}`;
+    const space = mctx.measureText(" ").width;
+    for (const L of lines) {
+      L.segs = [];
+      L.words.forEach((w, i) => {
+        L.segs.push({ s: w.a, e: w.b, word: true });
+        const nx = L.words[i + 1];
+        if (nx && nx.a > w.b) L.segs.push({ s: w.b, e: nx.a, word: false, fg: Math.min(1, space / (nx.a - w.b)) });
+      });
+    }
+    for (const { n, M } of STOPS) {
+      let s = 0, sh = 0, c = 0;
+      for (const L of lines) for (const g of L.wins[n]) { s += innerHalf(L, g.c, g.h + PAD, M); sh += g.h; c++; }
+      avgHalf[n] = c ? s / c : 100;
+      avgH[n] = c ? sh / c : 40;
+    }
+  }
+  function win(L, w0, w1) {
+    const ws = L.words.slice(L.words.indexOf(w0), L.words.indexOf(w1) + 1);
+    return { c: (w0.a + w1.b) / 2, h: (w1.b - w0.a) / 2, words: ws };
+  }
+
+  // ===================================================================
+  // Magnification profile
+  //   prof(u) = 1 on the plateau (|u| <= p), eases to 0 over the ramp
+  //   (smoothstep), 0 outside. The local scale is 1 + (k - 1) * prof, where k
+  //   is M over letters and, over the gaps between words, whatever brings a
+  //   justified gap back to one magnified space (so the lens stays compact).
+  //   Screen position X = integral of the local scale, so every word keeps
+  //   one uniform scale (letters never warp) and sizes change smoothly.
+  // ===================================================================
+  // Transition zone length grows with magnification, so words grow equally gently at every
+  // stop (22px at 1.65×; Jack, 2026-11-17). R is set from the lens magnification, not from
+  // the fade-in, so the zone never changes while the lens reaches the text.
+  const rampFor = M => RAMP * (M - 1) / 0.65;
+  function PF(u, p, R) {            // signed integral of prof from 0 to u
+    const a = Math.abs(u);
+    const v = Math.min(Math.max(a - p, 0), R), t = v / R;
+    return Math.sign(u) * (Math.min(a, p) + v - R * (t * t * t - t * t * t * t / 2));
+  }
+  function Xabs(L, x, c, p, M, R) { // screen x (before centring) of natural x on line L
+    let X = x;
+    for (const g of L.segs) {
+      if (g.s >= x) break;
+      const e = Math.min(g.e, x);
+      const k = g.word ? M : M * g.fg;
+      X += (k - 1) * (PF(e - c, p, R) - PF(g.s - c, p, R));
+    }
+    return X;
+  }
+  function innerHalf(L, c, p, M, R = rampFor(M)) {  // half width of the inner text area
+    const X0 = Xabs(L, c, c, p, M, R);
+    return Math.max(Xabs(L, c + p + R, c, p, M, R) - X0, X0 - Xabs(L, c - p - R, c, p, M, R));
+  }
+  function dims(half, M) {
+    const H = FONT * M * INNER_H + 2 * RIM;
+    return { W: 2 * half + 2 * RIM, H, R: H * CORNER };
+  }
+
+  // ===================================================================
+  // Springs (interruptible; keep their velocity)
+  // ===================================================================
+  class Spring {
+    constructor(v) { this.x = v; this.v = 0; this.t = v; }
+    set(v) { this.x = this.t = v; this.v = 0; }
+    step(dt, resp, damp) {
+      const w = 2 * Math.PI / resp, k = w * w, c = 2 * damp * w;
+      this.v += (-k * (this.x - this.t) - c * this.v) * dt;
+      this.x += this.v * dt;
+    }
+    settled(eps = 0.01) { return Math.abs(this.x - this.t) < eps && Math.abs(this.v) < eps * 10; }
+  }
+  const S = {
+    x: new Spring(0), y: new Spring(0),
+    p: new Spring(60), M: new Spring(STOPS[1].M),
+    aw: new Spring(120),              // lens half width while off the text
+    e: new Spring(0),                 // 0 = off the text (no magnification), 1 = reading
+    g: new Spring(0),                 // grow: 0 = point, 1 = full lens
+    sx: new Spring(0), sy: new Spring(0),   // squish (stretch along travel)
+    prev: new Spring(0),              // previous line's visibility while sliding to a new line
+  };
+
+  // ===================================================================
+  // State
+  // ===================================================================
+  let on = false;          // magnifier mode
+  let shown = false;       // lens exists (growing, visible or shrinking)
+  let pinned = false;
+  let kbd = null;          // { line, i } while the keyboard drives the lens
+  let dimOn = false;
+  let stop = 1;            // slider stop
+  let line = -1, prevLine = -1;
+  let onText = false;
+  let fade = 1;            // reduced-motion appear / disappear (opacity)
+  const ptr = { x: 0, y: 0, in: false, overTools: false };
+
+  // ===================================================================
+  // WebGL glass
+  // ===================================================================
+  // ?debug (testing only): keeps the drawn frame readable and exposes the state.
+  const DEBUG = new URLSearchParams(location.search).has("debug");
+  const SCENE = DEBUG && new URLSearchParams(location.search).has("scene");
+  const CARD = DEBUG && new URLSearchParams(location.search).get("card");
+  if (CARD) { const [cw, ch] = CARD.split("x"); Object.assign(document.getElementById("stage").style, { width: cw + "px", height: ch + "px" }); }
+  const gl = canvas.getContext("webgl2", { premultipliedAlpha: true, antialias: false, alpha: true, preserveDrawingBuffer: DEBUG });
+  const MAXW = 48;
+  let prog = null, U = {}, tex = null, texInfo = null;
+
+  const VS = `#version 300 es
+  in vec2 aPos; void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+  const FS = `#version 300 es
+  precision highp float;
+  uniform vec2 uRes; uniform float uDpr;
+  uniform vec2 uC; uniform float uF; uniform vec2 uB; uniform float uR; uniform float uRim; uniform float uAlpha;
+  uniform sampler2D uTex; uniform vec2 uTexO; uniform vec2 uTexS; uniform float uTexScale;
+  uniform vec3 uInk; uniform vec3 uBg; uniform float uDark;
+  uniform vec4 uW[${MAXW}]; uniform int uNA; uniform int uNB;
+  uniform vec4 uLA; uniform vec4 uLB;   // line: mid, top, bottom, alpha
+  uniform float uOn; uniform float uDim;
+  out vec4 o;
+
+  // Rounded rectangle with continuous (squircle-like) corners.
+  float sdLens(vec2 p, vec2 b, float r) {
+    vec2 q = abs(p) - b + r;
+    vec2 m = max(q, 0.0);
+    float l = pow(pow(m.x, 2.6) + pow(m.y, 2.6), 1.0 / 2.6);
+    return l + min(max(q.x, q.y), 0.0) - r;
+  }
+  float texA(vec2 nat, float lod) {
+    vec2 uv = (nat - uTexO) / uTexS;
+    if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return 0.0;
+    return textureLod(uTex, uv, lod).a;
+  }
+  // Magnified line: find the word under this pixel and sample it at its own uniform scale.
+  float magLine(vec2 p, int start, int count, vec4 L) {
+    if (L.w <= 0.001) return 0.0;
+    for (int i = 0; i < ${MAXW}; i++) {
+      if (i >= count) break;
+      vec4 w = uW[start + i];
+      if (p.x >= w.x && p.x <= w.y) {
+        float s = (w.y - w.x) / max(w.w - w.z, 0.001);
+        vec2 nat = vec2(uF + w.z + (p.x - w.x) / s, uC.y + p.y / s);
+        if (nat.y < L.y || nat.y > L.z) return 0.0;      // never another line
+        float lod = max(0.0, log2(uTexScale / (s * uDpr)));
+        return texA(nat, lod) * L.w;
+      }
+    }
+    return 0.0;
+  }
+
+  void main() {
+    vec2 frag = vec2(gl_FragCoord.x, uRes.y * uDpr - gl_FragCoord.y) / uDpr;
+    vec2 p = frag - uC;
+    float r = min(uR, min(uB.x, uB.y));
+    float d = sdLens(p, uB, r);
+    if (d > 34.0) { o = vec4(0.0); return; }
+
+    float px = 1.0 / uDpr;
+    float cov = 1.0 - smoothstep(-0.7 * px, 0.7 * px, d);
+
+    // Soft shadow
+    float ds = sdLens(p - vec2(0.0, 7.0), uB, r);
+    float sh = 1.0 - smoothstep(-8.0, 20.0, ds);
+    sh = sh * sh * mix(0.13, 0.5, uDark);
+
+    // Zones: rim (outer band) and the inner text area.
+    vec2 bi = max(uB - uRim, vec2(1.0));
+    float ri = max(r - uRim, 1.0);
+    ri = min(ri, min(bi.x, bi.y));
+    float dIn = sdLens(p, bi, ri);
+
+    vec3 glass = mix(uBg, vec3(1.0), mix(0.26, 0.04, uDark));
+    float base = log2(uTexScale / uDpr);
+
+    // Outward normal
+    vec2 e = vec2(0.5, 0.0);
+    vec2 n = vec2(sdLens(p + e.xy, uB, r) - sdLens(p - e.xy, uB, r),
+                  sdLens(p + e.yx, uB, r) - sdLens(p - e.yx, uB, r));
+    n = n / max(length(n), 1e-5);
+
+    vec3 col;
+    float depth = -d;
+    if (dIn < 0.0) {
+      // ---- Inner text area: only the magnified current line ----
+      float a = magLine(p, 0, uNA, uLA);
+      a = max(a, magLine(p, uNA, uNB, uLB));
+      // Off the text: clear glass (other lines at 1x), gone once reading.
+      if (uOn < 0.999) {
+        float inBand = step(uLA.y, frag.y) * step(frag.y, uLA.z);
+        a = max(a, texA(frag, base) * (1.0 - inBand) * (1.0 - uOn));
+      }
+      a *= smoothstep(0.0, 2.2, -dIn);                    // letters never touch the rim
+      col = mix(glass, uInk, a);
+    } else {
+      // ---- Rim: what lies under it is pushed out and smeared toward the edge ----
+      float t = clamp(depth / max(depth + dIn, 0.001), 0.0, 1.0);   // 0 = outer edge, 1 = inner edge
+      float k = uRim * 2.4 * (1.0 - t) * (1.0 - t);
+      vec2 s0 = frag - n * k;
+      float lod = base + 1.7 + 1.4 * (1.0 - t);
+      float a = (texA(s0, lod) + texA(s0 - n * 2.0, lod) + texA(s0 - n * 4.0, lod + 0.4)) / 3.0;
+      a *= 0.8 * uDim;
+      col = mix(glass, uInk, a);
+      // curved-edge shading
+      col = mix(col, uInk, (1.0 - uDark) * 0.07 * pow(1.0 - t, 1.5));
+      col = mix(col, vec3(1.0), uDark * 0.06 * pow(1.0 - t, 1.5));
+      // faint line where rim meets the text area
+      col = mix(col, uInk, exp(-abs(dIn) / 0.6) * mix(0.06, 0.0, uDark));
+      col = mix(col, vec3(1.0), exp(-abs(dIn) / 0.6) * mix(0.0, 0.07, uDark));
+    }
+
+    // Highlight: a fine bright edge, strongest at the top left, a faint glint bottom right.
+    vec2 Ld = normalize(vec2(-0.5, -0.86));
+    float edge = exp(-depth / 0.9);
+    float hl = edge * (0.28 + 0.72 * pow(max(dot(n, Ld), 0.0), 1.4)) + edge * 0.4 * pow(max(dot(n, -Ld), 0.0), 2.0);
+    col = mix(col, vec3(1.0), clamp(hl * mix(0.95, 0.5, uDark), 0.0, 1.0));
+    // Outline so the glass reads on a light page
+    col = mix(col, uInk, exp(-depth / 0.55) * (1.0 - uDark) * 0.16);
+
+    float A = cov * uAlpha;
+    o = vec4(col * A, A) + vec4(0.0, 0.0, 0.0, sh * (1.0 - cov) * uAlpha);
+  }`;
+
+  function initGL() {
+    if (!gl) return false;
+    const sh = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(s)); return null; }
+      return s;
+    };
+    const vs = sh(gl.VERTEX_SHADER, VS), fs = sh(gl.FRAGMENT_SHADER, FS);
+    if (!vs || !fs) return false;
+    prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(prog)); return false; }
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, "aPos");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    for (const n of ["uRes", "uDpr", "uC", "uF", "uB", "uR", "uRim", "uAlpha", "uTex", "uTexO", "uTexS", "uTexScale",
+      "uInk", "uBg", "uDark", "uW", "uNA", "uNB", "uLA", "uLB", "uOn", "uDim"]) U[n] = gl.getUniformLocation(prog, n);
+    tex = gl.createTexture();
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    return true;
+  }
+  const glOK = initGL();
+  if (!glOK) { magBtn.disabled = true; magBtn.title = "This browser cannot draw the lens"; }
+
+  let dpr = 1;
+  function resizeCanvas() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    if (DEBUG && +new URLSearchParams(location.search).get("dpr")) dpr = +new URLSearchParams(location.search).get("dpr");
+    canvas.width = Math.round(stageW * dpr);
+    canvas.height = Math.round(stageH * dpr);
+  }
+
+  // GPU memory (drawing buffer + text texture) exists only while the magnifier is on; when it
+  // is off, or the card is off screen, both are released.
+  let glHeld = false;
+  function acquireGL(force) {
+    if (!glOK || (glHeld && !force)) return;
+    resizeCanvas();
+    buildTexture();
+    glHeld = true;
+  }
+  function releaseGL() {
+    if (!glOK) return;
+    canvas.width = canvas.height = 1;
+    if (tex) { gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); }
+    texInfo = null;
+    glHeld = false;
+  }
+
+  // The passage drawn once, sharp enough to magnify (alpha mask; coloured in the shader).
+  function buildTexture() {
+    if (!glOK || !textRect) return;
+    const pad = 40;
+    const ox = textRect.l - pad, oy = textRect.t - pad;
+    const w = textRect.r - textRect.l + pad * 2, h = textRect.b - textRect.t + pad * 2;
+    const max = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    const scale = Math.min(dpr * M_MAX, max / w, max / h);
+    const c = document.createElement("canvas");
+    c.width = Math.ceil(w * scale); c.height = Math.ceil(h * scale);
+    const ctx = c.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.font = `${FONT}px ${READ_FONT}`;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textBaseline = "alphabetic";
+    for (const wd of words) ctx.fillText(wd.text, wd.a - ox, wd.base - oy);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    texInfo = { ox, oy, w: c.width / scale, h: c.height / scale, scale };
+  }
+
+  // Theme colours, read live (the Lab page animates them during a theme switch).
+  function rgb(str) {
+    str = str.trim();
+    if (str[0] === "#") {
+      const h = str.length === 4 ? str.slice(1).split("").map(c => c + c).join("") : str.slice(1, 7);
+      return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+    }
+    const m = str.match(/[\d.]+/g);
+    return m ? m.slice(0, 3).map(v => +v / 255) : [0, 0, 0];
+  }
+
+  // ===================================================================
+  // Targets: where the lens wants to be
+  // ===================================================================
+  const smooth = t => t * t * (3 - 2 * t);
+
+  function nearestLine(y) {
+    let best = 0, bd = Infinity;
+    lines.forEach((L, i) => { const d = Math.abs(L.mid - y); if (d < bd) { bd = d; best = i; } });
+    return best;
+  }
+  // Strong line snap with a small hysteresis past the midpoint between lines.
+  function pickLine(y) {
+    if (line < 0 || line >= lines.length) return nearestLine(y);
+    let l = line;
+    while (l < lines.length - 1 && y > (lines[l].mid + lines[l + 1].mid) / 2 + HYST) l++;
+    while (l > 0 && y < (lines[l].mid + lines[l - 1].mid) / 2 - HYST) l--;
+    return l;
+  }
+  // Light word-group snap: pointer motion is slowed near each group's centre.
+  function snapAlong(L, x, n) {
+    const ws = L.wins[n];
+    if (ws.length === 1 || x <= ws[0].c) return { x: ws[0].c, h: ws[0].h };
+    const last = ws[ws.length - 1];
+    if (x >= last.c) return { x: last.c, h: last.h };
+    let i = 0;
+    while (i < ws.length - 2 && x > ws[i + 1].c) i++;
+    const a = ws[i], b = ws[i + 1];
+    const span = b.c - a.c;
+    if (span < 0.5) return { x: a.c, h: Math.max(a.h, b.h) };
+    const t = (x - a.c) / span;
+    const ts = t - GROUP_SNAP * Math.sin(2 * Math.PI * t) / (2 * Math.PI);
+    return { x: a.c + ts * span, h: a.h + (b.h - a.h) * smooth(ts) };
+  }
+  function overText(x, y) {
+    return textRect && x >= textRect.l - 14 && x <= textRect.r + 14 &&
+      y >= textRect.t - PITCH * 0.5 && y <= textRect.b + PITCH * 0.5;
+  }
+  function setLine(l) {
+    if (l === line) return;
+    if (line >= 0) { prevLine = line; S.prev.set(1); }
+    line = l;
+    markCurrent();
+  }
+  function markCurrent() {
+    words.forEach(w => w.el.classList.toggle("cur", w.line === line));
+  }
+
+  function updateTargets() {
+    const n = STOPS[stop].n;
+    S.M.t = STOPS[stop].M;
+    S.aw.t = avgHalf[n];
+    if (pinned) return;
+    if (kbd) {
+      const L = lines[kbd.line], g = L.wins[n][Math.min(kbd.i, L.wins[n].length - 1)];
+      setLine(kbd.line);
+      onText = true;
+      S.x.t = g.c; S.y.t = L.mid; S.p.t = g.h + PAD; S.e.t = 1;
+    } else if (ptr.in && !ptr.overTools) {
+      onText = overText(ptr.x, ptr.y);
+      if (onText) {
+        setLine(pickLine(ptr.y));
+        const L = lines[line];
+        const s = snapAlong(L, ptr.x, n);
+        S.x.t = s.x; S.y.t = L.mid; S.p.t = s.h + PAD; S.e.t = 1;
+      } else {
+        S.x.t = ptr.x; S.y.t = ptr.y; S.p.t = avgH[n] + PAD; S.e.t = 0;
+        if (lines.length) setLine(nearestLine(ptr.y));
+      }
+    }
+    // Keep the lens inside the card.
+    const half = onText && line >= 0 ? innerHalf(lines[line], S.x.t, S.p.t, S.M.t) : avgHalf[n];
+    const { W, H } = dims(Math.min(half, stageW / 2 - EDGE - RIM), S.M.t);
+    // (Horizontally only the glass body is held inside the card, in draw(); the reading focus
+    // keeps gliding along the whole line.)
+    S.y.t = Math.min(Math.max(S.y.t, H / 2 + EDGE), stageH - H / 2 - EDGE);
+  }
+
+  // ===================================================================
+  // Frame loop
+  // ===================================================================
+  let raf = 0, last = 0;
+  const wbuf = new Float32Array(MAXW * 4);
+
+  function frame(now) {
+    raf = 0;
+    let dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+    last = now;
+    if (!shown) { clearGL(); return; }
+
+    updateTargets();
+    const rm = RM.matches;
+
+    if (rm) {
+      for (const k of ["x", "y", "p", "M", "aw", "e", "sx", "sy"]) S[k].set(S[k].t);
+      S.sx.set(0); S.sy.set(0);
+      S.g.x = 1; S.g.v = 0;               // full size; appear / disappear is a fade
+      S.prev.set(0);
+      const target = S.g.t > 0 ? 1 : 0;
+      fade += Math.sign(target - fade) * dt / 0.15;
+      fade = Math.min(1, Math.max(0, fade));
+    } else {
+      fade = 1;
+      const freeFollow = 0.085;                 // short, so it feels immediate
+      const yResp = onText || kbd || pinned ? 0.26 : freeFollow;   // line change: a spring slide
+      const sub = Math.ceil(dt / (1 / 240));
+      const h = dt / sub;
+      for (let i = 0; i < sub; i++) {
+        S.x.step(h, freeFollow, 0.86);
+        S.y.step(h, yResp, 0.74);
+        S.p.step(h, 0.2, 0.9);
+        S.M.step(h, 0.3, 0.9);
+        S.aw.step(h, 0.3, 0.9);
+        S.e.step(h, 0.3, 1);
+        if (S.g.t > 0) S.g.step(h, 0.42, 0.68); else S.g.step(h, 0.3, 1);
+        // Squish: a little stretch along the direction of travel, settling back on its own spring.
+        S.sx.t = Math.min(Math.abs(S.x.v) / 2600, 0.09);
+        S.sy.t = Math.min(Math.abs(S.y.v) / 2600, 0.09);
+        S.sx.step(h, 0.16, 0.72);
+        S.sy.step(h, 0.16, 0.72);
+        S.prev.t = 0;
+        S.prev.step(h, 0.14, 1);
+      }
+      if (S.g.t === 0 && S.g.x < 0.02) S.g.set(0);
+    }
+    if (S.e.x < 0) S.e.x = 0;
+    if (S.e.x > 1) S.e.x = 1;
+
+    draw();
+
+    const gone = S.g.t === 0 && (rm ? fade <= 0 : S.g.x <= 0);
+    // Gone: either switched off (free the GPU), or hidden over the toolbar (keep it, it comes back).
+    if (gone) { shown = false; clearGL(); if (!on) finishOff(); return; }
+    raf = requestAnimationFrame(frame);
+  }
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+
+  function clearGL() {
+    if (!glOK) return;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  }
+
+  function packLine(L, start, c, p, M, R) {
+    let n = 0;
+    if (!L) return 0;
+    const X0 = Xabs(L, c, c, p, M, R);
+    for (const w of L.words) {
+      if (start + n >= MAXW) break;
+      const o = (start + n) * 4;
+      wbuf[o] = Xabs(L, w.a, c, p, M, R) - X0; wbuf[o + 1] = Xabs(L, w.b, c, p, M, R) - X0;
+      wbuf[o + 2] = w.a - c; wbuf[o + 3] = w.b - c;
+      n++;
+    }
+    return n;
+  }
+  let drawn = { cx: 0, cy: 0, bx: 0, by: 0 };   // the lens as last drawn (for clicks on it)
+  function currentHalf() {
+    const L = lines[line];
+    const onHalf = L ? innerHalf(L, S.x.x, Math.max(S.p.x, 4), S.M.x) : S.aw.x;
+    return S.aw.x + (onHalf - S.aw.x) * Math.min(1, Math.max(0, S.e.x));
+  }
+
+  function draw() {
+    if (!glOK || !texInfo) return;
+    const cs = getComputedStyle(root);
+    const bg = rgb(cs.getPropertyValue("--bg")), ink = rgb(cs.getPropertyValue("--ink"));
+    const dark = Math.min(1, Math.max(0, 1 - (0.2126 * bg[0] + 0.7152 * bg[1] + 0.0722 * bg[2]) / 0.9));
+
+    const Ms = S.M.x, p = Math.max(S.p.x, 4);
+    const Mcur = 1 + (Ms - 1) * S.e.x;           // magnification grows in as the lens reaches the text
+    const { W, H, R } = dims(Math.min(currentHalf(), stageW / 2 - EDGE - RIM), Ms);
+    const g = Math.max(S.g.x, 0);
+    const fx = 1 + S.sx.x - 0.5 * S.sy.x, fy = 1 + S.sy.x - 0.5 * S.sx.x;
+    const bx = Math.min(W / 2 * fx * g, stageW / 2 - EDGE), by = Math.min(H / 2 * fy * g, stageH / 2 - EDGE);
+    // The lens never leaves the card, even mid-motion or stretched.
+    const cx = Math.min(Math.max(S.x.x, bx + EDGE), stageW - bx - EDGE);
+    const cy = Math.min(Math.max(S.y.x, by + EDGE), stageH - by - EDGE);
+    // Reading focus. Off the text it is simply the lens centre (clear glass shows what is beneath).
+    const F = cx + (S.x.x - cx) * Math.min(1, Math.max(0, S.e.x));
+
+    const LA = lines[line], LB = prevLine >= 0 ? lines[prevLine] : null;
+    const nA = packLine(LA, 0, F, p, Mcur, rampFor(Ms));
+    const prevA = LB && LB !== LA ? Math.min(1, Math.max(0, S.prev.x)) : 0;
+    const nB = prevA > 0 ? packLine(LB, nA, F, p, Mcur, rampFor(Ms)) : 0;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(prog);
+    gl.uniform2f(U.uRes, stageW, stageH);
+    gl.uniform1f(U.uDpr, canvas.width / stageW);
+    gl.uniform2f(U.uC, cx, cy);
+    gl.uniform1f(U.uF, F);                // reading focus: magnified words are centred on it, drawn at the lens centre
+    drawn = { cx, cy, bx, by };
+    gl.uniform2f(U.uB, Math.max(bx, 0.01), Math.max(by, 0.01));
+    gl.uniform1f(U.uR, R * g);
+    gl.uniform1f(U.uRim, RIM * g);
+    gl.uniform1f(U.uAlpha, fade);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform1i(U.uTex, 0);
+    gl.uniform2f(U.uTexO, texInfo.ox, texInfo.oy);
+    gl.uniform2f(U.uTexS, texInfo.w, texInfo.h);
+    gl.uniform1f(U.uTexScale, texInfo.scale);
+    gl.uniform3f(U.uInk, ink[0], ink[1], ink[2]);
+    gl.uniform3f(U.uBg, bg[0], bg[1], bg[2]);
+    gl.uniform1f(U.uDark, dark);
+    gl.uniform4fv(U.uW, wbuf);
+    gl.uniform1i(U.uNA, nA);
+    gl.uniform1i(U.uNB, nB);
+    gl.uniform4f(U.uLA, LA ? LA.mid : 0, LA ? LA.top : 0, LA ? LA.bot : 0, LA ? 1 : 0);
+    gl.uniform4f(U.uLB, LB ? LB.mid : 0, LB ? LB.top : 0, LB ? LB.bot : 0, prevA);
+    gl.uniform1f(U.uOn, S.e.x);
+    gl.uniform1f(U.uDim, dimOn ? 0.4 : 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // Dim other lines while the lens reads.
+    passage.classList.toggle("dimming", dimOn && on && S.g.t > 0 && S.e.t > 0.5);
+  }
+
+  // ===================================================================
+  // Turning on / off, pinning
+  // ===================================================================
+  function syncCursor() {
+    root.classList.toggle("lens-cursor", on && shown && !pinned && !kbd && ptr.in && !ptr.overTools);
+  }
+
+  function spawn(x, y) {
+    shown = true;
+    acquireGL();
+    S.x.set(x); S.y.set(y);
+    S.g.set(0); S.g.t = 1;
+    fade = 0;
+    S.sx.set(0); S.sy.set(0);
+    const n = STOPS[stop].n;
+    S.p.set(avgH[n] + PAD);
+    S.aw.set(avgHalf[n]);
+    S.M.set(STOPS[stop].M);
+    S.e.set(0);
+    line = -1; prevLine = -1;
+    updateTargets();
+    syncCursor();
+    kick();
+  }
+
+  function turnOn(viaKeyboard) {
+    if (on || !glOK) return;
+    on = true;
+    root.classList.add("mag-on");
+    magBtn.setAttribute("aria-pressed", "true");
+    extras.inert = false;
+    if (viaKeyboard || !ptr.in) {
+      kbd = { line: 0, i: 0 };
+      const L = lines[0], g0 = L.wins[STOPS[stop].n][0];
+      spawn(g0.c, L.mid);
+      announce();
+    } else if (!ptr.overTools) {
+      spawn(ptr.x, ptr.y);
+    }
+    // Otherwise the lens grows out of the pointer as soon as it leaves the toolbar.
+  }
+
+  function turnOff() {
+    if (!on) return;
+    on = false;
+    pinned = false;
+    kbd = null;
+    root.classList.remove("mag-on");
+    magBtn.setAttribute("aria-pressed", "false");
+    if (extras.contains(document.activeElement)) magBtn.focus();
+    extras.inert = true;
+    hidePreview(true);
+    passage.classList.remove("dimming");
+    if (shown) {
+      S.g.t = 0;
+      // Shrink back into the pointer.
+      if (ptr.in) { S.x.t = ptr.x; S.y.t = ptr.y; }
+      kick();
+    } else finishOff();          // already hidden (pointer was over the toolbar): free the GPU now
+    syncCursor();
+  }
+  function finishOff() {
+    line = -1; prevLine = -1;
+    words.forEach(w => w.el.classList.remove("cur"));
+    releaseGL();
+    syncCursor();
+  }
+
+  function insideLens(x, y) {
+    return Math.abs(x - drawn.cx) <= drawn.bx && Math.abs(y - drawn.cy) <= drawn.by;
+  }
+
+  // ===================================================================
+  // Pointer
+  // ===================================================================
+  function toolsHit(x, y) {
+    const sr = stage.getBoundingClientRect();
+    const r = toolbar.getBoundingClientRect();
+    const m = 6;
+    return x >= r.left - sr.left - m && x <= r.right - sr.left + m && y >= r.top - sr.top - m && y <= r.bottom - sr.top + m;
+  }
+
+  document.addEventListener("pointermove", e => {
+    if (SCENE) return;
+    if (e.pointerType === "touch") return;
+    const sr = stage.getBoundingClientRect();
+    const nx = e.clientX - sr.left, ny = e.clientY - sr.top;
+    const moved = Math.hypot(nx - ptr.x, ny - ptr.y) > 2 || !ptr.in;
+    ptr.x = nx; ptr.y = ny; ptr.in = true;
+    ptr.overTools = toolsHit(nx, ny);
+    if (kbd && moved && !pinned) kbd = null;
+    if (on && !shown && !ptr.overTools) spawn(ptr.x, ptr.y);
+    // Over the toolbar (icon, slider, toggle) the glass shrinks into the pointer and the normal
+    // cursor shows; leaving the toolbar brings the glass back out of the pointer (Jack, 2026-11-17).
+    if (on && shown && ptr.overTools && !pinned && !kbd && S.g.t !== 0) {
+      S.g.t = 0; S.x.t = ptr.x; S.y.t = ptr.y; S.e.t = 0;
+    }
+    if (on && shown && S.g.t === 0 && !ptr.overTools) { S.g.t = 1; }   // regrow if it was shrinking
+    syncCursor();
+    if (shown) kick();
+  });
+
+  // Leaving the card turns the magnifier off.
+  document.addEventListener("pointerout", e => {
+    if (SCENE) return;
+    if (e.relatedTarget) return;
+    ptr.in = false;
+    turnOff();
+  });
+
+  stage.addEventListener("pointerdown", e => {
+    if (!on || !shown || e.button !== 0 || e.pointerType === "touch") return;
+    const sr = stage.getBoundingClientRect();
+    ptr.x = e.clientX - sr.left; ptr.y = e.clientY - sr.top; ptr.in = true;
+    ptr.overTools = toolsHit(ptr.x, ptr.y);
+    if (toolbar.contains(e.target) || ptr.overTools) return;
+    if (pinned) {
+      if (insideLens(ptr.x, ptr.y)) {
+        pinned = false;
+        kbd = null;
+        syncCursor();
+        kick();
+      }
+      return;
+    }
+    if (onText || kbd) {
+      // Pin where the lens is reading.
+      kbd = null;
+      updateTargets();
+      pinned = true;
+      syncCursor();
+      kick();
+    }
+  });
+
+  magBtn.addEventListener("click", e => {
+    if (on) turnOff();
+    else turnOn(e.detail === 0);
+  });
+
+  // ===================================================================
+  // Keyboard: Enter on the icon; arrows move the lens; Esc turns it off.
+  // ===================================================================
+  function announce() {
+    if (!kbd) return;
+    const L = lines[kbd.line], ws = L.wins[STOPS[stop].n];
+    const g = ws[Math.min(kbd.i, ws.length - 1)];
+    live.textContent = g.words.map(w => w.text).join(" ");
+  }
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && on) { e.preventDefault(); turnOff(); return; }
+    if (!on || !lines.length) return;
+    if (e.target === sizeEl || e.target === dimBtn) return;
+    const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    const n = STOPS[stop].n;
+    if (!kbd) {
+      const l = line >= 0 ? line : 0;
+      const ws = lines[l].wins[n];
+      let bi = 0, bd = Infinity;
+      ws.forEach((g, i) => { const d = Math.abs(g.c - S.x.x); if (d < bd) { bd = d; bi = i; } });
+      kbd = { line: l, i: bi };
+    }
+    pinned = false;
+    const ws = () => lines[kbd.line].wins[n];
+    if (e.key === "ArrowRight") {
+      if (kbd.i + n <= ws().length - 1) kbd.i += n;
+      else if (kbd.i < ws().length - 1) kbd.i = ws().length - 1;
+      else if (kbd.line < lines.length - 1) { kbd.line++; kbd.i = 0; }
+    } else if (e.key === "ArrowLeft") {
+      if (kbd.i - n >= 0) kbd.i -= n;
+      else if (kbd.i > 0) kbd.i = 0;
+      else if (kbd.line > 0) { kbd.line--; kbd.i = ws().length - 1; }
+    } else {
+      const x = ws()[Math.min(kbd.i, ws().length - 1)].c;
+      const nl = kbd.line + (e.key === "ArrowDown" ? 1 : -1);
+      if (nl < 0 || nl >= lines.length) return;
+      kbd.line = nl;
+      let bi = 0, bd = Infinity;
+      ws().forEach((g, i) => { const d = Math.abs(g.c - x); if (d < bd) { bd = d; bi = i; } });
+      kbd.i = bi;
+    }
+    if (!shown) spawn(S.x.t, S.y.t);
+    syncCursor();
+    announce();
+    kick();
+  });
+
+  // ===================================================================
+  // Size slider + its live preview, Dim toggle
+  // ===================================================================
+  let previewTimer = 0, sliding = false;
+  function placePreview() {
+    const n = STOPS[stop].n;
+    const { W, H, R } = dims(avgHalf[n], STOPS[stop].M);
+    document.getElementById("pvM").textContent = STOPS[stop].M + "×";
+    document.getElementById("pvN").textContent = n + " words";
+    const sr = stage.getBoundingClientRect();
+    const r = sizeEl.getBoundingClientRect();
+    const cx = (r.left + r.right) / 2 - sr.left;
+    const left = Math.min(Math.max(cx - W / 2, 8), stageW - W - 8);
+    previewEl.style.width = W + "px";
+    previewEl.style.height = H + "px";
+    previewEl.style.borderRadius = R + "px";
+    previewEl.style.left = left + "px";
+    previewEl.style.top = (r.bottom - sr.top + 14) + "px";
+  }
+  function showPreview() {
+    clearTimeout(previewTimer);
+    if (!previewEl.classList.contains("show")) {
+      // First appearance: take the right size and place at once, then only fade / settle in.
+      previewEl.style.transitionProperty = "none";
+      placePreview();
+      previewEl.getBoundingClientRect();
+      previewEl.style.transitionProperty = "";
+    } else placePreview();
+    previewEl.classList.add("show");
+  }
+  function hidePreview(now) {
+    clearTimeout(previewTimer);
+    if (now) { previewEl.classList.remove("show"); return; }
+    previewTimer = setTimeout(() => previewEl.classList.remove("show"), 450);
+  }
+  const valueText = v => `${STOPS[v].M}×, ${STOPS[v].n} words`;
+  sizeEl.setAttribute("aria-valuetext", valueText(stop));
+  function setStop(v) {
+    stop = v;
+    sizeEl.setAttribute("aria-valuetext", valueText(v));
+    if (kbd) announce();
+    kick();
+  }
+  sizeEl.addEventListener("pointerdown", () => { sliding = true; showPreview(); });
+  document.addEventListener("pointerup", () => { if (sliding) { sliding = false; hidePreview(); } });
+  document.addEventListener("pointercancel", () => { if (sliding) { sliding = false; hidePreview(); } });
+  sizeEl.addEventListener("input", () => {
+    setStop(+sizeEl.value);
+    showPreview();
+    if (!sliding) hidePreview();
+  });
+
+  dimBtn.addEventListener("click", () => {
+    dimOn = !dimOn;
+    dimBtn.setAttribute("aria-checked", String(dimOn));
+    kick();
+  });
+
+  // ===================================================================
+  // Layout
+  // ===================================================================
+  function relayout() {
+    fitPassage();
+    measure();
+    if (shown || on) acquireGL(true); else releaseGL();   // GPU memory is held only while the magnifier is on
+    if (line >= lines.length) line = lines.length - 1;
+    if (kbd && kbd.line >= lines.length) kbd.line = lines.length - 1;
+    markCurrent();
+    if (shown) kick(); else clearGL();
+  }
+  if (DEBUG) window.__mag = { S, get lines() { return lines; }, get state() { return { on, shown, pinned, kbd, line, prevLine, onText, stop, dimOn }; }, dims, Xabs, innerHalf, get avgHalf() { return avgHalf; }, get drawn() { return drawn; }, get gpu() { return { held: glHeld, canvas: canvas.width + "x" + canvas.height, tex: texInfo ? Math.round(texInfo.w * texInfo.scale) + "x" + Math.round(texInfo.h * texInfo.scale) : "1x1", raf }; },
+    tick(ms) { if (raf) cancelAnimationFrame(raf); raf = 0; frame(last + ms); } };
+  // ?debug&scene=line:3,word:4,... sets up a still frame for visual checks (testing only).
+  const scene = DEBUG && new URLSearchParams(location.search).get("scene");
+  if (scene) (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => {
+    relayout();
+    const o = Object.fromEntries(scene.split(",").map(kv => kv.split(":")));
+    if (o.stop) { stop = +o.stop; sizeEl.value = o.stop; }
+    if (o.dim) { dimOn = true; dimBtn.setAttribute("aria-checked", "true"); }
+    let x, y;
+    if (o.line) { const L = lines[+o.line], w = L.words[+(o.word || 0)]; x = (w.a + w.b) / 2 + (+o.dx || 0); y = L.mid + (+o.dy || 0); }
+    else { x = +o.x; y = +o.y; }
+    const run = n => { for (let i = 0; i < n; i++) { if (raf) cancelAnimationFrame(raf); raf = 0; frame(last + 16); } };
+    Object.assign(ptr, { x: x + (+o.fromx || 0), y: y + (+o.fromy || 0), in: true, overTools: false });
+    turnOn(false);
+    run(60);
+    if (o.fromx || o.fromy) { ptr.x = x; ptr.y = y; run(+o.t || 4); }
+    if (o.pin) { pinned = true; ptr.x = +o.px || x; ptr.y = +o.py || y; syncCursor(); }
+    if (o.preview) showPreview();
+    if (o.off) { turnOff(); run(+o.t || 4); }
+    if (o.freeze) { if (raf) cancelAnimationFrame(raf); raf = 0; } else kick();
+    setInterval(() => { document.title = JSON.stringify({ iw: innerWidth, ih: innerHeight, stageW, stageH, line, y: +S.y.x.toFixed(1), ty: +S.y.t.toFixed(1), mids: lines.map(L => +L.mid.toFixed(1)), ptr, shown, raf }); }, 100);
+  }, 600));
+
+  // Card scrolled fully out of view: switch off and free the GPU at once (no one can see it).
+  new IntersectionObserver(([en]) => {
+    if (en.isIntersecting || !shown) return;
+    turnOff();
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0; shown = false; S.g.set(0);
+    clearGL(); finishOff();
+  }).observe(stage);
+
+  new ResizeObserver(relayout).observe(stage);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+  relayout();
+})();
+</script>
+</body>
+</html>

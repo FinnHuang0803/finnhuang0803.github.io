@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Password eye</title>
+<style>
+  @font-face {
+    font-family: "Inter";
+    src: url("fonts/inter-latin-wght-normal.woff2") format("woff2");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  /* Linen + Ember tokens (site-design-system.md §2) */
+  :root {
+    color-scheme: light;
+    --bg: #F5F3EF;
+    --surface: #ECE9E4;
+    --line: #DEDAD3;
+    --nav-selected: #E4E0D9;
+    --ink: #242424;
+    --ink-2: #575757;
+    --ink-3: #696969;
+    --accent: #C2410C;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #161514;
+      --surface: #1F1E1C;
+      --line: #2C2A27;
+      --nav-selected: #2B2926;
+      --ink: #E6E6E6;
+      --ink-2: #B0B0B0;
+      --ink-3: #8C8C8C;
+      --accent: #FB8A5C;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #161514;
+    --surface: #1F1E1C;
+    --line: #2C2A27;
+    --nav-selected: #2B2926;
+    --ink: #E6E6E6;
+    --ink-2: #B0B0B0;
+    --ink-3: #8C8C8C;
+    --accent: #FB8A5C;
+  }
+
+  /* Spring easings are generated in JS; these are fallbacks. */
+  :root {
+    --spring-lid: cubic-bezier(.3, 1.3, .5, 1);
+    --spring-lid-dur: 520ms;
+    --spring-press: cubic-bezier(.3, 1.4, .5, 1);
+    --spring-press-dur: 360ms;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 25.6px;
+    font-weight: 420;
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    transition: background-color 400ms ease, color 400ms ease;
+  }
+
+  .proto {
+    width: min(320px, 100%);
+    display: grid;
+    gap: 8px;
+  }
+
+  .label {
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 450;
+    color: var(--ink-3);
+    letter-spacing: -0.006em;
+    user-select: none;
+  }
+
+  /* Squircle shapes: element is clipped to the path, fill + border drawn on the same path. */
+  .sq { position: relative; isolation: isolate; }
+  .sq > svg.shape {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+  }
+  .sq > svg.shape path { transition: fill 400ms ease, stroke 400ms ease; }
+
+  .field {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px 0 16px;
+    cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .field > svg.shape .fill { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+
+  .chars {
+    flex: 1;
+    display: flex;
+    gap: 2px;
+    font-variant-numeric: tabular-nums;
+    font-size: 16px;
+    font-weight: 450;
+    color: var(--ink);
+  }
+  .cell { position: relative; display: inline-block; }
+  .cell .digit, .cell .dot {
+    transition:
+      transform var(--spring-lid-dur) var(--spring-lid),
+      opacity 200ms ease;
+  }
+  .cell .digit { display: inline-block; }
+  .cell .dot {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 7px; height: 7px;
+    margin: -3.5px 0 0 -3.5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* Hidden (default) */
+  .proto:not(.is-shown) .digit { opacity: 0; transform: translateY(5px) scale(.6); }
+  .proto:not(.is-shown) .dot   { opacity: 1; transform: none; }
+  /* Shown */
+  .proto.is-shown .digit { opacity: 1; transform: none; }
+  .proto.is-shown .dot   { opacity: 0; transform: scale(.3); }
+
+  /* Eye button */
+  .eye {
+    width: 36px; height: 36px;
+    flex: none;
+    display: grid; place-items: center;
+    padding: 0; margin: 0;
+    border: 0;
+    background: none;
+    color: var(--ink-2);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--spring-press-dur) var(--spring-press);
+  }
+  .eye:hover { color: var(--ink); }
+  .eye:active { transform: scale(.88); transition-duration: 120ms; transition-timing-function: ease-out; }
+  .eye:focus { outline: none; }
+  .eye > svg.shape .hover { fill: var(--nav-selected); opacity: 0; transition: opacity 120ms ease, fill 400ms ease; }
+  .eye > svg.shape .ring  { fill: none; stroke: var(--accent); stroke-width: 4; opacity: 0; }
+  .eye:hover > svg.shape .hover { opacity: 1; }
+  .eye:focus-visible > svg.shape .ring { opacity: 1; }
+
+  .icon { width: 22px; height: 22px; overflow: visible; display: block; }
+  .icon * {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .icon .pupil { fill: currentColor; stroke: none; }
+  .icon .lid, .icon .iris, .icon .lashes {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    transition:
+      transform var(--spring-lid-dur) var(--spring-lid),
+      opacity 200ms ease;
+  }
+  /* Closed (password hidden): upper lid folds down onto the lower lid. */
+  .proto:not(.is-shown) .icon .lid    { transform: scaleY(-1); }
+  .proto:not(.is-shown) .icon .iris   { transform: scaleY(0); opacity: 0; }
+  .proto:not(.is-shown) .icon .lashes { transform: none; opacity: 1; }
+  /* Open (password shown) */
+  .proto.is-shown .icon .lid    { transform: none; }
+  .proto.is-shown .icon .iris   { transform: none; opacity: 1; }
+  .proto.is-shown .icon .lashes { transform: translateY(-2px); opacity: 0; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cell .digit, .cell .dot,
+    .icon .lid, .icon .iris, .icon .lashes,
+    .eye { transition: opacity 150ms ease !important; }
+    .proto:not(.is-shown) .digit,
+    .proto.is-shown .dot { transform: none; }
+    .eye:active { transform: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="proto" id="proto">
+    <span class="label" id="pw-label">Password</span>
+    <div class="field sq" data-radius="8" role="textbox" aria-readonly="true" aria-labelledby="pw-label">
+      <svg class="shape" aria-hidden="true"><path class="fill"/></svg>
+      <span class="chars" aria-hidden="true" id="chars"></span>
+      <span class="sr-only" id="pw-sr">Hidden, 7 characters</span>
+      <button class="eye sq" data-radius="8" type="button" aria-pressed="false" aria-label="Show password" id="eye">
+        <svg class="shape" aria-hidden="true"><path class="hover"/><path class="ring"/></svg>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <defs>
+            <clipPath id="almond"><path d="M2 12C5 7.5 8.5 6 12 6C15.5 6 19 7.5 22 12C19 16.5 15.5 18 12 18C8.5 18 5 16.5 2 12Z"/></clipPath>
+          </defs>
+          <g class="lashes">
+            <path d="M12 18V20.6"/>
+            <path d="M6.8 16.7L5.7 19"/>
+            <path d="M17.2 16.7L18.3 19"/>
+          </g>
+          <path class="lower" d="M22 12C19 16.5 15.5 18 12 18C8.5 18 5 16.5 2 12"/>
+          <path class="lid" d="M2 12C5 7.5 8.5 6 12 6C15.5 6 19 7.5 22 12"/>
+          <g clip-path="url(#almond)">
+            <g class="iris">
+              <g id="look">
+                <circle cx="12" cy="12" r="3.4"/>
+                <circle class="pupil" id="pupil" cx="12" cy="12" r="1.6"/>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const PASSWORD = "0123456";
+  const root = document.documentElement;
+  const proto = document.getElementById("proto");
+  const eye = document.getElementById("eye");
+  const charsEl = document.getElementById("chars");
+  const srEl = document.getElementById("pw-sr");
+  const look = document.getElementById("look");
+  const pupil = document.getElementById("pupil");
+
+  // Theme: ?theme=light|dark overrides the system setting (the Lab page can also set data-theme).
+  const qTheme = new URLSearchParams(location.search).get("theme");
+  if (qTheme === "light" || qTheme === "dark") root.dataset.theme = qTheme;
+
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+  // ---------- Spring easings as CSS linear() ----------
+  function springLinear(response, damping) {
+    const w = 2 * Math.PI / response;
+    const wd = w * Math.sqrt(1 - damping * damping);
+    const x = t => 1 - Math.exp(-damping * w * t) * (Math.cos(wd * t) + (damping * w / wd) * Math.sin(wd * t));
+    // settle when the envelope drops below 0.1%
+    const dur = Math.log(1000) / (damping * w);
+    const n = 48, pts = [];
+    for (let i = 0; i <= n; i++) pts.push(+x(dur * i / n).toFixed(4));
+    pts[n] = 1;
+    return { easing: `linear(${pts.join(", ")})`, ms: Math.round(dur * 1000) };
+  }
+  if (CSS.supports("transition-timing-function", "linear(0, 1)")) {
+    const lid = springLinear(0.42, 0.72);
+    const press = springLinear(0.3, 0.6);
+    root.style.setProperty("--spring-lid", lid.easing);
+    root.style.setProperty("--spring-lid-dur", lid.ms + "ms");
+    root.style.setProperty("--spring-press", press.easing);
+    root.style.setProperty("--spring-press-dur", press.ms + "ms");
+  }
+
+  // ---------- Squircle (site-design-system.md §2) ----------
+  function squircle(w, h, r, s = 0.6) {
+    const rad = d => d * Math.PI / 180, f = v => +v.toFixed(3);
+    const p = (1 + s) * r;
+    if (p > Math.min(w, h) / 2) throw new Error("too small for 60% smoothing: " + w + "x" + h + " r" + r);
+    const am = 90 * (1 - s), L = Math.sin(rad(am / 2)) * r * Math.SQRT2;
+    const p34 = r * Math.tan(rad((90 - am) / 4)), beta = 45 * s;
+    const c = p34 * Math.cos(rad(beta)), d = c * Math.tan(rad(beta));
+    const b = (p - L - c - d) / 3, a = 2 * b;
+    const A=f(a),AB=f(a+b),ABC=f(a+b+c),BC=f(b+c),C=f(c),D=f(d),R=f(r),l=f(L);
+    return [`M ${f(w-p)} 0`,`c ${A} 0 ${AB} 0 ${ABC} ${D}`,`a ${R} ${R} 0 0 1 ${l} ${l}`,`c ${D} ${C} ${D} ${BC} ${D} ${ABC}`,
+      `L ${w} ${f(h-p)}`,`c 0 ${A} 0 ${AB} ${-D} ${ABC}`,`a ${R} ${R} 0 0 1 ${-l} ${l}`,`c ${-C} ${D} ${-BC} ${D} ${-ABC} ${D}`,
+      `L ${f(p)} ${h}`,`c ${-A} 0 ${-AB} 0 ${-ABC} ${-D}`,`a ${R} ${R} 0 0 1 ${-l} ${-l}`,`c ${-D} ${-C} ${-D} ${-BC} ${-D} ${-ABC}`,
+      `L 0 ${f(p)}`,`c 0 ${-A} 0 ${-AB} ${D} ${-ABC}`,`a ${R} ${R} 0 0 1 ${l} ${-l}`,`c ${C} ${-D} ${BC} ${-D} ${ABC} ${-D}`,`Z`].join(" ");
+  }
+  function shapeSquircle(el) {
+    const w = el.offsetWidth, h = el.offsetHeight, r = +el.dataset.radius;
+    if (!w || !h) return;
+    const d = squircle(w, h, r);
+    el.style.clipPath = `path("${d}")`;
+    const svg = el.querySelector(":scope > svg.shape");
+    svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.querySelectorAll("path").forEach(p => p.setAttribute("d", d));
+  }
+  const ro = new ResizeObserver(entries => entries.forEach(e => shapeSquircle(e.target)));
+  document.querySelectorAll(".sq").forEach(el => { shapeSquircle(el); ro.observe(el); });
+
+  // ---------- Characters ----------
+  for (const ch of PASSWORD) {
+    const cell = document.createElement("span");
+    cell.className = "cell";
+    cell.innerHTML = `<span class="digit">${ch}</span><span class="dot"></span>`;
+    charsEl.appendChild(cell);
+  }
+
+  // ---------- Toggle ----------
+  let shown = false;
+  function setShown(v) {
+    shown = v;
+    proto.classList.toggle("is-shown", v);
+    eye.setAttribute("aria-pressed", String(v));
+    eye.setAttribute("aria-label", v ? "Hide password" : "Show password");
+    srEl.textContent = v ? PASSWORD.split("").join(" ") : "Hidden, 7 characters";
+    if (!v) { target.x = target.y = 0; kick(); }
+    else if (pointer) aim(pointer.x, pointer.y);
+  }
+  eye.addEventListener("click", () => setShown(!shown));
+
+  // ---------- Pupil follows the cursor (only inside this prototype) ----------
+  const MAX_X = 3.0, MAX_Y = 1.6;          // view-box units the iris may travel
+  const PUPIL_EXTRA = 0.35;                 // pupil travels a little further for depth
+  const target = { x: 0, y: 0 }, pos = { x: 0, y: 0 }, vel = { x: 0, y: 0 };
+  let raf = 0, last = 0;
+
+  function aim(clientX, clientY) {
+    if (!shown) return;
+    const r = eye.getBoundingClientRect();
+    const dx = clientX - (r.left + r.width / 2);
+    const dy = clientY - (r.top + r.height / 2);
+    const dist = Math.hypot(dx, dy);
+    if (dist < 0.5) { target.x = target.y = 0; kick(); return; }
+    const k = 1 - Math.exp(-dist / 90);       // close to the eye = small movement
+    target.x = dx / dist * k * MAX_X;
+    target.y = dy / dist * k * MAX_Y;
+    kick();
+  }
+  function rest() { target.x = target.y = 0; kick(); }
+
+  function render() {
+    look.setAttribute("transform", `translate(${pos.x.toFixed(3)} ${pos.y.toFixed(3)})`);
+    pupil.setAttribute("transform", `translate(${(pos.x * PUPIL_EXTRA).toFixed(3)} ${(pos.y * PUPIL_EXTRA).toFixed(3)})`);
+  }
+  function step(t) {
+    const dt = Math.min(0.032, (t - last) / 1000 || 0.016);
+    last = t;
+    if (reduceMotion.matches) {
+      pos.x = target.x; pos.y = target.y; vel.x = vel.y = 0;
+    } else {
+      const K = 320, C = 26;                  // stiffness, damping (slightly underdamped)
+      for (const a of ["x", "y"]) {
+        const f = -K * (pos[a] - target[a]) - C * vel[a];
+        vel[a] += f * dt;
+        pos[a] += vel[a] * dt;
+      }
+    }
+    render();
+    const settled = Math.abs(pos.x - target.x) < 0.001 && Math.abs(pos.y - target.y) < 0.001 &&
+                    Math.abs(vel.x) < 0.01 && Math.abs(vel.y) < 0.01;
+    if (settled) { pos.x = target.x; pos.y = target.y; render(); raf = 0; }
+    else raf = requestAnimationFrame(step);
+  }
+  function kick() {
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+  }
+
+  let pointer = null;
+  const track = e => { pointer = { x: e.clientX, y: e.clientY }; aim(pointer.x, pointer.y); };
+  document.addEventListener("pointermove", track);
+  document.addEventListener("pointerdown", track);
+  document.addEventListener("pointerout", e => { if (!e.relatedTarget) { pointer = null; rest(); } });
+  window.addEventListener("blur", rest);
+})();
+</script>
+</body>
+</html>

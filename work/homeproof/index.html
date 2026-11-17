@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homeproof | Finn Huang</title>
+<!-- Opt in to the page transition before anything else loads, so Chrome always sees it (§4.2). -->
+<style>@view-transition { navigation: auto; }</style>
+<meta name="description" content="Every photo you take while renting protects your deposit.">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Homeproof | Finn Huang">
+<meta property="og:description" content="Every photo you take while renting protects your deposit.">
+<meta property="og:url" content="https://finnhuang0803.github.io/work/homeproof/">
+<meta property="og:image" content="https://finnhuang0803.github.io/share-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://finnhuang0803.github.io/share-card.png">
+<script src="/assets/js/theme-init.js"></script>
+<script src="/assets/js/transition.js"></script>
+<script>document.documentElement.classList.add("js")</script>
+<link rel="preload" href="/assets/fonts/cal-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/tokens.css">
+<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/transition.css">
+<link rel="stylesheet" href="/assets/css/project.css">
+<script type="module" src="/assets/js/site.js"></script>
+<script type="module" src="/assets/js/project.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Navigation bar: identical on every page; only aria-current moves. -->
+  <header class="site-nav">
+    <div class="container site-nav__inner">
+      <a class="site-nav__name" href="/">Finn Huang</a>
+      <nav aria-label="Main">
+        <ul class="site-nav__list">
+          <li><a class="site-nav__link" href="/" aria-current="page">Work</a></li>
+          <li><a class="site-nav__link" href="/lab/">Lab</a></li>
+          <li><a class="site-nav__link" href="/about/">About</a></li>
+        </ul>
+      </nav>
+      <button class="theme-toggle sq" data-squircle="12" type="button" aria-label="Switch theme">
+        <svg class="sq-shape" aria-hidden="true"><path class="hover"/><path class="ring"/></svg>
+        <svg class="theme-toggle__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <mask id="theme-toggle-mask" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32">
+            <rect x="-4" y="-4" width="32" height="32" fill="#fff"/>
+            <circle class="theme-toggle__cut" cx="17.2" cy="7.6" r="7.4" fill="#000"/>
+          </mask>
+          <g mask="url(#theme-toggle-mask)"><circle class="theme-toggle__disc" cx="12" cy="12" r="5"/></g>
+          <path class="theme-toggle__rays" d="M12 1.8v2M12 20.2v2M1.8 12h2M20.2 12h2M4.79 4.79l1.41 1.41M17.8 17.8l1.41 1.41M4.79 19.21l1.41-1.41M17.8 6.2l1.41-1.41"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="page project">
+    <header class="project-hero container">
+      <a class="back-link" href="/" data-enter>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 10H4.5M9.5 5l-5 5 5 5"/></svg>
+        All Work
+      </a>
+      <div class="project-hero__body">
+        <h1 class="project-hero__title" data-enter>Homeproof</h1>
+        <p class="project-hero__intro" data-enter>Every photo you take while renting protects your deposit.</p>
+        <dl class="info-line" data-enter>
+          <div><dt>Role</dt><dd>Product Designer</dd></div>
+          <div><dt>Year</dt><dd>2026</dd></div>
+          <div><dt>Type</dt><dd>iOS app (concept)</dd></div>
+        </dl>
+      </div>
+    </header>
+
+    <section class="project-section container" aria-label="Overview">
+      <div class="lead" data-reveal="text">
+        <p>Deposit disputes come down to one question: <strong>was it like this before?</strong> Renters rarely have the proof.</p>
+        <p>Homeproof turns move-in, meter readings, and repairs into <strong>one timeline of evidence both sides can trust</strong>.</p>
+      </div>
+      <figure class="fig fig--single" data-reveal="figure">
+        <div class="phone">
+          <img src="/projects/homeproof/01-320.webp" srcset="/projects/homeproof/01-320.webp 320w, /projects/homeproof/01-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="654" alt="Homeproof home screen" loading="lazy" decoding="async">
+          <button class="marker" type="button" style="--x: 9%; --y: 41.5%" data-note="note-1" aria-label="Note 1" aria-describedby="note-1"><span>1</span></button>
+        </div>
+        <div class="notes">
+          <div class="note sq" id="note-1" data-squircle="8" data-note="note-1">
+            <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+            <span class="note__badge" aria-hidden="true">1</span>
+            <div class="note__text">
+              <p class="note__title">Protection as a sentence, not a score.</p>
+              <p class="note__body">Progress reads as advice instead of a grade.</p>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="project-section container" aria-labelledby="s-timeline">
+      <h2 class="section-title" id="s-timeline" data-reveal="text">One timeline turns every renting moment into evidence.</h2>
+      <figure class="timeline" data-timeline>
+        <div class="timeline__bracket"><span>Repeats during the lease</span></div>
+        <div class="timeline__box tl-1 sq" data-squircle="16"><p class="timeline__title">Move-in</p><p class="timeline__sub">Day 1, check</p></div>
+        <div class="timeline__box tl-2 sq" data-squircle="16"><p class="timeline__title">Meter &amp; rent</p><p class="timeline__sub">Monthly</p></div>
+        <div class="timeline__box tl-3 sq" data-squircle="16"><p class="timeline__title">Repairs</p><p class="timeline__sub">Anytime</p></div>
+        <div class="timeline__box tl-4 sq" data-squircle="16"><p class="timeline__title">Renewal</p><p class="timeline__sub">Yearly</p></div>
+        <div class="timeline__box tl-5 sq" data-squircle="16"><p class="timeline__title">Move-out</p><p class="timeline__sub">Last day, compare</p></div>
+        <svg class="timeline__arrow tl-a1" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5"/></svg>
+        <svg class="timeline__arrow tl-a2" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5"/></svg>
+        <svg class="timeline__arrow tl-a3" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5"/></svg>
+        <svg class="timeline__arrow tl-a4" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5"/></svg>
+        <span class="timeline__link tl-1" aria-hidden="true"></span>
+        <span class="timeline__link tl-2" aria-hidden="true"></span>
+        <span class="timeline__link tl-3" aria-hidden="true"></span>
+        <span class="timeline__link tl-4" aria-hidden="true"></span>
+        <span class="timeline__link tl-5" aria-hidden="true"></span>
+        <span class="timeline__rail" aria-hidden="true"></span>
+        <p class="timeline__bar sq" data-squircle="16"><span>Home timeline: every photo time-stamped and filed by room</span></p>
+      </figure>
+      <ol class="principles" data-reveal="text">
+        <li><span class="principles__num">01</span><p class="principles__title">AI flags, people decide.</p><p class="principles__body">AI points out differences. Renter and landlord confirm every call.</p></li>
+        <li><span class="principles__num">02</span><p class="principles__title">Fair to both sides.</p><p class="principles__body">Landlords confirm through a link: no app, no login, the same locked copy.</p></li>
+        <li><span class="principles__num">03</span><p class="principles__title">Every photo pays off now.</p><p class="principles__body">Each capture returns an answer right away: a bill, a status, a score.</p></li>
+      </ol>
+      <figure class="fig fig--single" data-reveal="figure">
+        <div class="phone">
+          <img src="/projects/homeproof/02-320.webp" srcset="/projects/homeproof/02-320.webp 320w, /projects/homeproof/02-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="654" alt="Homeproof timeline screen" loading="lazy" decoding="async">
+          <button class="marker" type="button" style="--x: 11.5%; --y: 29.2%" data-note="note-2" aria-label="Note 2" aria-describedby="note-2"><span>2</span></button>
+          <button class="marker" type="button" style="--x: 11.5%; --y: 72.5%" data-note="note-3" aria-label="Note 3" aria-describedby="note-3"><span>3</span></button>
+          <button class="marker" type="button" style="--x: 78.9%; --y: 89.3%" data-note="note-4" aria-label="Note 4" aria-describedby="note-4"><span>4</span></button>
+        </div>
+        <div class="notes">
+          <div class="note sq" id="note-2" data-squircle="8" data-note="note-2">
+            <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+            <span class="note__badge" aria-hidden="true">2</span>
+            <div class="note__text">
+              <p class="note__title">One timeline, every moment.</p>
+              <p class="note__body">Meters, rent, repairs, and renewals all land in the same record.</p>
+            </div>
+          </div>
+          <div class="note sq" id="note-3" data-squircle="8" data-note="note-3">
+            <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+            <span class="note__badge" aria-hidden="true">3</span>
+            <div class="note__text">
+              <p class="note__title">Green means both sides agreed.</p>
+              <p class="note__body">Locked evidence stands out from personal notes.</p>
+            </div>
+          </div>
+          <div class="note sq" id="note-4" data-squircle="8" data-note="note-4">
+            <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+            <span class="note__badge" aria-hidden="true">4</span>
+            <div class="note__text">
+              <p class="note__title">Capture first, sort later.</p>
+              <p class="note__body">The camera sits outside the tab bar, one tap from anywhere.</p>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="project-section container" aria-labelledby="s-capture">
+      <h2 class="section-title" id="s-capture" data-reveal="text">Guided capture makes good evidence the easy path.</h2>
+      <figure class="fig fig--rows">
+        <div class="row" data-reveal="figure">
+          <div class="step">
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/03-320.webp" srcset="/projects/homeproof/03-320.webp 320w, /projects/homeproof/03-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="655" alt="Checklist screen" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 9.2%; --y: 57.5%" data-note="note-5" aria-label="Note 5" aria-describedby="note-5"><span>5</span></button>
+              </div>
+            </div>
+            <p class="step__label">01 Checklist</p>
+            <div class="notes">
+              <div class="note sq" id="note-5" data-squircle="8" data-note="note-5">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">5</span>
+                <div class="note__text">
+                  <p class="note__title">Big job, small steps.</p>
+                  <p class="note__body">One room at a time, saved as you go.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <svg class="step__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17.5M14.5 6l6 6-6 6"/></svg>
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/04-320.webp" srcset="/projects/homeproof/04-320.webp 320w, /projects/homeproof/04-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="655" alt="Guided capture screen" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 9.2%; --y: 17.4%" data-note="note-6" aria-label="Note 6" aria-describedby="note-6"><span>6</span></button>
+              </div>
+            </div>
+            <p class="step__label">02 Guided capture</p>
+            <div class="notes">
+              <div class="note sq" id="note-6" data-squircle="8" data-note="note-6">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">6</span>
+                <div class="note__text">
+                  <p class="note__title">Nothing gets skipped.</p>
+                  <p class="note__body">Every wall, ceiling, and floor gets its shot.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row" data-reveal="figure">
+          <div class="step step--pair">
+            <svg class="step__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17.5M14.5 6l6 6-6 6"/></svg>
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/05-320.webp" srcset="/projects/homeproof/05-320.webp 320w, /projects/homeproof/05-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="655" alt="AI flag screen, 82% confident" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 25.3%; --y: 73.5%" data-note="note-7" aria-label="Note 7" aria-describedby="note-7"><span>7</span></button>
+              </div>
+              <div class="phone">
+                <img src="/projects/homeproof/06-320.webp" srcset="/projects/homeproof/06-320.webp 320w, /projects/homeproof/06-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="655" alt="AI flag screen, not sure" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 24.8%; --y: 73.5%" data-note="note-7" aria-label="Note 7" aria-describedby="note-7"><span>7</span></button>
+              </div>
+            </div>
+            <p class="step__label">03 AI flag</p>
+            <div class="notes">
+              <div class="note sq" id="note-7" data-squircle="8" data-note="note-7">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">7</span>
+                <div class="note__text">
+                  <p class="note__title">The AI admits doubt.</p>
+                  <p class="note__body">Low confidence is impossible to miss.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <svg class="step__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17.5M14.5 6l6 6-6 6"/></svg>
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/07-320.webp" srcset="/projects/homeproof/07-320.webp 320w, /projects/homeproof/07-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="655" alt="Landlord confirmation screen" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 14.2%; --y: 73%" data-note="note-8" aria-label="Note 8" aria-describedby="note-8"><span>8</span></button>
+              </div>
+            </div>
+            <p class="step__label">04 Landlord confirms</p>
+            <div class="notes">
+              <div class="note sq" id="note-8" data-squircle="8" data-note="note-8">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">8</span>
+                <div class="note__text">
+                  <p class="note__title">Only renters install.</p>
+                  <p class="note__body">Landlords confirm from a link, no app, no login.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="project-section container" aria-labelledby="s-monthly">
+      <h2 class="section-title" id="s-monthly" data-reveal="text">Thirty seconds a month keeps the record alive.</h2>
+      <figure class="fig fig--rows">
+        <div class="row" data-reveal="figure">
+          <div class="step">
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/08-320.webp" srcset="/projects/homeproof/08-320.webp 320w, /projects/homeproof/08-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="654" alt="Monthly utility screen in English" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 76.8%; --y: 18%" data-note="note-9" aria-label="Note 9" aria-describedby="note-9"><span>9</span></button>
+                <button class="marker" type="button" style="--x: 9%; --y: 60.2%" data-note="note-10" aria-label="Note 10" aria-describedby="note-10"><span>10</span></button>
+              </div>
+            </div>
+            <p class="step__label">Monthly utility, English</p>
+            <div class="notes">
+              <div class="note sq" id="note-9" data-squircle="8" data-note="note-9">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">9</span>
+                <div class="note__text">
+                  <p class="note__title">The photo is the receipt.</p>
+                  <p class="note__body">Tap it to fix a misread.</p>
+                </div>
+              </div>
+              <div class="note sq" id="note-10" data-squircle="8" data-note="note-10">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">10</span>
+                <div class="note__text">
+                  <p class="note__title">Facts, not accusations.</p>
+                  <p class="note__body">The landlord may read this too.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/09-320.webp" srcset="/projects/homeproof/09-320.webp 320w, /projects/homeproof/09-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="654" alt="Monthly utility screen in Traditional Chinese" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 9%; --y: 30.5%" data-note="note-11" aria-label="Note 11" aria-describedby="note-11"><span>11</span></button>
+              </div>
+            </div>
+            <p class="step__label">Monthly utility, Traditional Chinese</p>
+            <div class="notes">
+              <div class="note sq" id="note-11" data-squircle="8" data-note="note-11">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">11</span>
+                <div class="note__text">
+                  <p class="note__title">One layout, two languages.</p>
+                  <p class="note__body">Every string is a Variable with EN and zh-TW modes.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/10-320.webp" srcset="/projects/homeproof/10-320.webp 320w, /projects/homeproof/10-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="654" alt="Repair record screen" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 9%; --y: 53.2%" data-note="note-12" aria-label="Note 12" aria-describedby="note-12"><span>12</span></button>
+              </div>
+            </div>
+            <p class="step__label">Repair record</p>
+            <div class="notes">
+              <div class="note sq" id="note-12" data-squircle="8" data-note="note-12">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">12</span>
+                <div class="note__text">
+                  <p class="note__title">The paper trail writes itself.</p>
+                  <p class="note__body">Every step is time-stamped.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="project-section container" aria-labelledby="s-moveout">
+      <h2 class="section-title" id="s-moveout" data-reveal="text">Same evidence, fewer arguments.</h2>
+      <div class="lead" data-reveal="text">
+        <p>At move-out, Homeproof lays the move-in photo over the camera as a faint <strong>ghost</strong>. Line the two up and the shutter fires on its own, so <strong>every spot is shot from the same angle</strong> as on move-in. The results then sort themselves into what is new and what was already there.</p>
+      </div>
+      <figure class="fig fig--rows">
+        <div class="row" data-reveal="figure">
+          <div class="step">
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/11-320.webp" srcset="/projects/homeproof/11-320.webp 320w, /projects/homeproof/11-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="655" alt="Ghost capture screen" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 43.8%; --y: 84.3%" data-note="note-13" aria-label="Note 13" aria-describedby="note-13"><span>13</span></button>
+              </div>
+            </div>
+            <p class="step__label">01 Ghost capture</p>
+            <div class="notes">
+              <div class="note sq" id="note-13" data-squircle="8" data-note="note-13">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">13</span>
+                <div class="note__text">
+                  <p class="note__title">Hands-free shutter.</p>
+                  <p class="note__body">It fires the moment every corner turns green.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <svg class="step__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17.5M14.5 6l6 6-6 6"/></svg>
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/12-320.webp" srcset="/projects/homeproof/12-320.webp 320w, /projects/homeproof/12-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="653" alt="Move-out results screen" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 9%; --y: 23.4%" data-note="note-14" aria-label="Note 14" aria-describedby="note-14"><span>14</span></button>
+              </div>
+            </div>
+            <p class="step__label">02 Results</p>
+            <div class="notes">
+              <div class="note sq" id="note-14" data-squircle="8" data-note="note-14">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">14</span>
+                <div class="note__text">
+                  <p class="note__title">Red is rare on purpose.</p>
+                  <p class="note__body">Only new damage needs review.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <svg class="step__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17.5M14.5 6l6 6-6 6"/></svg>
+            <div class="step__phones">
+              <div class="phone">
+                <img src="/projects/homeproof/13-320.webp" srcset="/projects/homeproof/13-320.webp 320w, /projects/homeproof/13-640.webp 640w" sizes="(max-width: 767.98px) 260px, 320px" width="320" height="655" alt="Compare screen with a date slider" loading="lazy" decoding="async">
+                <button class="marker" type="button" style="--x: 50%; --y: 58.5%" data-note="note-15" aria-label="Note 15" aria-describedby="note-15"><span>15</span></button>
+              </div>
+            </div>
+            <p class="step__label">03 Compare</p>
+            <div class="notes">
+              <div class="note sq" id="note-15" data-squircle="8" data-note="note-15">
+                <svg class="sq-shape" aria-hidden="true"><path class="fill"/></svg>
+                <span class="note__badge" aria-hidden="true">15</span>
+                <div class="note__text">
+                  <p class="note__title">Three dates, one swipe.</p>
+                  <p class="note__body">Drag to see what changed and when.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </figure>
+    </section>
+  </main>
+
+  <!-- Footer: identical on every page. -->
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p class="site-footer__credit">Finn Huang · Made with Claude Code</p>
+      <ul class="site-footer__links">
+        <li><a class="site-footer__link" href="https://www.linkedin.com/in/finn-huang-227323421" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a class="site-footer__link" href="https://www.behance.net/huangjack2" target="_blank" rel="noopener">Behance</a></li>
+        <li><a class="site-footer__link" href="/Finn-Huang-Resume.pdf" target="_blank" rel="noopener">Résumé</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

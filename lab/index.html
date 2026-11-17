@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab | Finn Huang</title>
+<meta name="description" content="Interaction prototypes by Finn.">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Lab | Finn Huang">
+<meta property="og:description" content="Interaction prototypes by Finn.">
+<meta property="og:url" content="https://finnhuang0803.github.io/lab/">
+<meta property="og:image" content="https://finnhuang0803.github.io/share-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://finnhuang0803.github.io/share-card.png">
+<script src="/assets/js/theme-init.js"></script>
+<link rel="preload" href="/assets/fonts/cal-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/tokens.css">
+<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/lab.css">
+<link rel="preload" href="/content/lab.json" as="fetch" crossorigin>
+<script type="module" src="/assets/js/site.js"></script>
+<script type="module" src="/assets/js/lab.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Navigation bar: identical on every page; only aria-current moves. -->
+  <header class="site-nav">
+    <div class="container site-nav__inner">
+      <a class="site-nav__name" href="/">Finn Huang</a>
+      <nav aria-label="Main">
+        <ul class="site-nav__list">
+          <li><a class="site-nav__link" href="/">Work</a></li>
+          <li><a class="site-nav__link" href="/lab/" aria-current="page">Lab</a></li>
+          <li><a class="site-nav__link" href="/about/">About</a></li>
+        </ul>
+      </nav>
+      <button class="theme-toggle sq" data-squircle="12" type="button" aria-label="Switch theme">
+        <svg class="sq-shape" aria-hidden="true"><path class="hover"/><path class="ring"/></svg>
+        <svg class="theme-toggle__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <mask id="theme-toggle-mask" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32">
+            <rect x="-4" y="-4" width="32" height="32" fill="#fff"/>
+            <circle class="theme-toggle__cut" cx="17.2" cy="7.6" r="7.4" fill="#000"/>
+          </mask>
+          <g mask="url(#theme-toggle-mask)"><circle class="theme-toggle__disc" cx="12" cy="12" r="5"/></g>
+          <path class="theme-toggle__rays" d="M12 1.8v2M12 20.2v2M1.8 12h2M20.2 12h2M4.79 4.79l1.41 1.41M17.8 17.8l1.41 1.41M4.79 19.21l1.41-1.41M17.8 6.2l1.41-1.41"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="page lab">
+    <header class="lab-head">
+      <h1 class="lab-title" data-page-enter>Lab</h1>
+      <p class="lab-sub" data-page-enter>Interaction prototype design</p>
+    </header>
+
+    <!-- Filters (§6): the selected pill slides between them on spring-state (lab.js). -->
+    <div class="lab-filters" data-page-enter role="group" aria-label="Filter prototypes by interaction" data-lab-filters>
+      <span class="lab-pill" aria-hidden="true"><i class="lab-pill__l"></i><i class="lab-pill__m"></i><i class="lab-pill__r"></i></span>
+      <button class="lab-filter" type="button" data-filter="all" data-label="All" aria-pressed="true">All</button>
+      <button class="lab-filter" type="button" data-filter="press" data-label="Press" aria-pressed="false">Press</button>
+      <button class="lab-filter" type="button" data-filter="hover" data-label="Hover" aria-pressed="false">Hover</button>
+      <button class="lab-filter" type="button" data-filter="drag" data-label="Drag" aria-pressed="false">Drag</button>
+    </div>
+    <p class="visually-hidden" aria-live="polite" data-lab-status></p>
+
+    <!-- Cards are built from /content/lab.json; each hosts its prototype live (lab.js). -->
+    <ul class="lab-grid" data-lab-grid></ul>
+  </main>
+
+  <!-- Footer: identical on every page. -->
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p class="site-footer__credit">Finn Huang · Made with Claude Code</p>
+      <ul class="site-footer__links">
+        <li><a class="site-footer__link" href="https://www.linkedin.com/in/finn-huang-227323421" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a class="site-footer__link" href="https://www.behance.net/huangjack2" target="_blank" rel="noopener">Behance</a></li>
+        <li><a class="site-footer__link" href="/Finn-Huang-Resume.pdf" target="_blank" rel="noopener">Résumé</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>

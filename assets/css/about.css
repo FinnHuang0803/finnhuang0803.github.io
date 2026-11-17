@@ -1,0 +1,303 @@
+/* About page (site-design-system.md §7): intro, How I work, Recognition, Education, closing,
+   buttons and the Copy email completion feedback (§7.6). Spacing: §2 "Spacing and pacing". */
+
+/* ---------- 7.1 Intro: fills the first screen ---------- */
+.about-intro {
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100svh - var(--nav-h));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  align-items: center;
+  gap: var(--grid-gap) clamp(48px, 6.6667vw, 96px);     /* 96 between text and photo at 1440 */
+  padding-block: 48px 104px;                            /* the pair sits a little above the middle */
+}
+.about-intro__place {
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight-strong);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+.about-intro__name {
+  margin-top: 16px;
+  font-family: var(--font-display);
+  font-size: var(--hero-size);
+  line-height: var(--hero-lh);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+}
+.about-intro__lead {
+  max-width: 560px;
+  margin-top: 24px;
+  font-size: var(--lead-size);
+  line-height: var(--lead-lh);
+  font-weight: var(--lead-weight);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.about-intro .about-actions { margin-top: 40px; }
+.about-intro__text { position: relative; }
+.about-intro .copy-fallback { position: absolute; top: 100%; left: 0; }   /* appears without moving the intro */
+
+.about-photo {
+  width: 100%;
+  aspect-ratio: 560 / 557;               /* the photo's own shape: never cropped */
+  overflow: hidden;
+  background: var(--surface);            /* while the image decodes */
+}
+.about-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- Sections further down: 144px after each (fluid) ---------- */
+.about-section { padding-bottom: var(--section-gap); }
+.about-intro + .about-section { padding-top: var(--section-gap); }   /* breathing room after the first screen */
+
+.about-heading {
+  font-family: var(--font-display);
+  font-size: var(--h2-major-size);
+  line-height: var(--heading-lh);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+  text-wrap: balance;
+}
+/* Small label above the heading: a deliberate exception to Hallmark's "no eyebrow" rule (§7.4). */
+.section-label {
+  margin-bottom: 12px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight-strong);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+
+/* ---------- 7.2 How I work: three points side by side (same type as the Homeproof principles) ---------- */
+.ways {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  margin-top: 48px;
+}
+.ways__title {
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: var(--tracking-text);
+  color: var(--ink);
+}
+.ways__body {
+  max-width: 340px;
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 420;
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+
+/* ---------- 7.3 / 7.4 Recognition and Education: label + heading left, ruled list right ---------- */
+.about-list {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--grid-gap);
+  align-items: start;
+}
+.entries { border-bottom: 1px solid var(--line); }
+.entry {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 32px;
+  padding-block: 24px;
+  border-top: 1px solid var(--line);
+}
+.entry__title {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-text);
+  color: var(--ink);
+}
+.entry__sub {
+  margin-top: 4px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+.entry__year {
+  flex: none;
+  font-size: var(--meta-size);
+  line-height: 28px;                      /* on the title's line */
+  font-weight: var(--meta-weight-strong);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+  text-align: right;
+}
+
+/* ---------- 7.5 Closing ---------- */
+.about-closing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.about-closing__line {
+  max-width: 960px;
+  font-family: var(--font-display);
+  font-size: var(--hero-size);
+  line-height: var(--hero-lh);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--ink);
+  text-wrap: balance;
+}
+.about-closing .about-actions { margin-top: 48px; }
+
+/* ---------- Buttons ---------- */
+.about-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.about-actions--center { justify-content: center; }
+
+/* A full pill (plain radius, like the nav pill), drawn as two round caps and a middle
+   so Copy email can shrink into a circle with transforms only (§7.6, §8).
+   --k: 0 = button, 1 = circle; --half: how far each cap travels (set by about.js). */
+.btn {
+  --h: 44px;
+  --k: 0;
+  --half: 0px;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  place-items: center;
+  height: var(--h);
+  padding: 0 20px;
+  border: 0;
+  background: none;
+  font-size: var(--button-size);
+  line-height: var(--button-lh);
+  font-weight: var(--button-weight);
+  letter-spacing: var(--tracking-small);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--spring-press-dur) var(--spring-press);
+}
+.btn > .btn__label, .btn > .btn__check { grid-area: 1 / 1; }
+.btn--primary   { --fill: var(--ink);     --fill-hover: color-mix(in oklab, var(--ink) 84%, var(--bg)); color: var(--bg); }
+.btn--secondary { --fill: var(--surface); --fill-hover: var(--nav-selected); color: var(--ink); }
+
+.btn__shape { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.btn__shape > span { position: absolute; inset: 0; }
+.btn__shape i {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--fill);
+  transition: background-color 120ms ease;
+}
+.btn__shape .l, .btn__shape .r { width: var(--h); border-radius: 50%; }
+.btn__shape .l { left: 0;  transform: translate3d(calc(var(--k) * var(--half)), 0, 0); }
+.btn__shape .r { right: 0; transform: translate3d(calc(var(--k) * var(--half) * -1), 0, 0); }
+.btn__shape .m {
+  left: calc(var(--h) / 2);
+  right: calc(var(--h) / 2);
+  transform: scaleX(max(0, 1 - var(--k)));
+}
+/* Focus ring: 2px accent with a 2px gap, drawn around the same pieces so it follows the circle. */
+.btn__ring-a, .btn__ring-b { opacity: 0; }
+.btn__ring-a i { box-shadow: 0 0 0 4px var(--accent); }
+.btn__ring-b i { box-shadow: 0 0 0 2px var(--bg); background: var(--bg); }
+.btn:focus-visible { outline: none; }
+.btn:focus-visible .btn__ring-a,
+.btn:focus-visible .btn__ring-b { opacity: 1; }
+
+@media (hover: hover) {
+  .btn:hover .btn__fill i { background: var(--fill-hover); }
+}
+.btn:active:not(.is-busy) {
+  transform: scale(.96);
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+/* Completion feedback pieces (built by about.js inside each Copy email button) */
+.btn__label { display: block; }
+.btn__check {
+  width: 20px; height: 20px;
+  overflow: hidden;                       /* the wipe that draws the stroke */
+  opacity: 0;
+  pointer-events: none;
+}
+.btn__check > span { display: block; width: 100%; height: 100%; }
+.btn__check svg {
+  width: 20px; height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.btn__burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+.btn__burst i {
+  position: absolute;
+  left: -2.5px; top: -2.5px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+}
+
+/* Fallback when copying is blocked (or without JavaScript): the address as text. */
+.copy-fallback {
+  display: none;
+  margin-top: 16px;
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+.copy-fallback a {
+  margin-left: 6px;
+  color: var(--accent);
+  border-radius: 2px;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.copy-fallback.is-on,
+html:not(.js) .copy-fallback { display: block; }
+html:not(.js) [data-copy-email] { display: none; }
+
+/* ---------- Scroll reveals (about.js): hidden only once JavaScript is running ---------- */
+.js [data-reveal]:not(.is-in) { opacity: 0; }
+
+/* ---------- Tablet and below: the intro stacks, text first ---------- */
+@media (max-width: 899.98px) {
+  .about-intro {
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: 56px;
+    padding-block: 40px 64px;
+  }
+  .about-photo { max-width: 440px; }
+  .about-list { grid-template-columns: 1fr; gap: 32px; }
+  .ways { grid-template-columns: 1fr; gap: 40px; margin-top: 40px; }
+}
+@media (max-width: 479.98px) {
+  .about-intro { gap: 48px; padding-block: 32px 56px; }
+  .about-intro .about-actions { margin-top: 32px; }
+  .entry { gap: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btn:active:not(.is-busy) { transform: none; }
+}

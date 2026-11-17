@@ -1,0 +1,62 @@
+[
+  {
+    "id": "ventari",
+    "order": 1,
+    "title": "Ventari",
+    "summary": "A multi-asset trading dashboard for stocks and crypto.",
+    "hover": "One calm workspace for stocks and crypto, from portfolio overview to placing an order.",
+    "tags": ["Crypto Exchange", "Fintech", "Dashboard"],
+    "card": { "light": "#DCE6E7", "dark": "#1C2527" },
+    "cover": { "1x": "/projects/ventari/cover-800.webp", "1200": "/projects/ventari/cover-1200.webp", "2x": "/projects/ventari/cover-1600.webp", "width": 800, "height": 600 },
+    "fade": { "1x": "/projects/ventari/fade-800.webp", "1200": "/projects/ventari/fade-1200.webp", "2x": "/projects/ventari/fade-1600.webp" },
+    "hoverVideo": "/projects/ventari/hover.mp4",
+    "role": "Product Designer",
+    "year": 2026,
+    "type": "Desktop web app (concept)"
+  },
+  {
+    "id": "clasp",
+    "order": 2,
+    "title": "Clasp",
+    "summary": "A crypto wallet that works like a real one.",
+    "hover": "Money lives in pockets you can pull out, and every transfer is a physical act you can feel.",
+    "tags": ["iOS app", "Crypto wallet", "Interaction design"],
+    "card": { "light": "#E7E3D6", "dark": "#25241E" },
+    "cover": { "1x": "/projects/clasp/cover-800.webp", "1200": "/projects/clasp/cover-1200.webp", "2x": "/projects/clasp/cover-1600.webp", "width": 800, "height": 600 },
+    "fade": { "1x": "/projects/clasp/fade-800.webp", "1200": "/projects/clasp/fade-1200.webp", "2x": "/projects/clasp/fade-1600.webp" },
+    "hoverVideo": null,
+    "role": "Product Designer",
+    "year": 2026,
+    "type": "iOS app (concept)"
+  },
+  {
+    "id": "homeproof",
+    "order": 3,
+    "title": "Homeproof",
+    "summary": "Every photo you take while renting protects your deposit.",
+    "hover": "Move-in, meter readings and repairs become one timeline of evidence both renter and landlord can trust.",
+    "tags": ["iOS app", "Proptech", "AI-assisted"],
+    "card": { "light": "#D9E6E0", "dark": "#1B2622" },
+    "cover": { "1x": "/projects/homeproof/cover-800.webp", "1200": "/projects/homeproof/cover-1200.webp", "2x": "/projects/homeproof/cover-1600.webp", "width": 800, "height": 600 },
+    "fade": { "1x": "/projects/homeproof/fade-800.webp", "1200": "/projects/homeproof/fade-1200.webp", "2x": "/projects/homeproof/fade-1600.webp" },
+    "hoverVideo": null,
+    "role": "Product Designer",
+    "year": 2026,
+    "type": "iOS app (concept)"
+  },
+  {
+    "id": "manhole-cover",
+    "order": 4,
+    "title": "Recycled Rubber Manhole Cover",
+    "summary": "A safer, greener manhole cover made from recycled rubber.",
+    "hover": "A recycled-rubber pad on a reusable metal base adds grip for riders and cuts maintenance and waste. Red Dot Best of the Best 2025.",
+    "tags": ["Industrial design", "SDGs", "Sustainability"],
+    "card": { "light": "#ECDFDA", "dark": "#2A201E" },
+    "cover": { "1x": "/projects/manhole-cover/cover-800.webp", "1200": "/projects/manhole-cover/cover-1200.webp", "2x": "/projects/manhole-cover/cover-1600.webp", "width": 800, "height": 600 },
+    "fade": { "1x": "/projects/manhole-cover/fade-800.webp", "1200": "/projects/manhole-cover/fade-1200.webp", "2x": "/projects/manhole-cover/fade-1600.webp" },
+    "hoverVideo": null,
+    "role": "Industrial Designer",
+    "year": 2025,
+    "type": "Industrial design"
+  }
+]

@@ -1,0 +1,56 @@
+/* Circular reveal between Home and project pages (site-design-system.md §4.2).
+   Loaded on Home and every project page only; the motion itself is in transition.js. */
+
+/* Both pages opt in to cross-document view transitions. They carry the return (project →
+   Home) and the Forward button into a project; transition.js skips every other navigation.
+   (Opening from a card draws its circle on Home itself, see .pt-veil.)
+   The opt-in itself, @view-transition { navigation: auto; }, is an inline <style> at the top of
+   each page's <head>: in this file it sometimes arrived after Chrome had already decided, and
+   the return circle was skipped (found in step 7). */
+
+/* The navigation bar is identical on both pages: it stays still above the circle. */
+.site-nav { view-transition-name: site-nav; }
+
+/* Pointer input reaches the live page during a transition, so a click is never lost. */
+::view-transition { pointer-events: none; }
+
+/* Opening: the new page (the project) is clipped to the growing circle over the old page,
+   which stays as it was. No blending: both images are opaque. */
+html.pt-open::view-transition-old(root),
+html.pt-open::view-transition-new(root),
+html.pt-return::view-transition-old(root),
+html.pt-return::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Returning: the old page (the project) lies on top and keeps covering Home until the grid
+   is in place and the cards are about to rise; then it shrinks into the card. */
+html.pt-return::view-transition-old(root) {
+  z-index: 1;
+  animation: pt-hold 3s linear;
+}
+@keyframes pt-hold { from { opacity: 1; } to { opacity: 1; } }
+
+/* Returning to Home: its content waits, hidden, until the grid and its cards are ready (a few
+   frames). With "pt-unpainted" the nav waits too: nothing is painted, so the browser keeps the
+   previous page's last frame on screen until Home appears at the grid. */
+html.pt-placing .page,
+html.pt-placing .site-footer,
+html.pt-unpainted body { visibility: hidden; }
+
+/* The circle in the page colour, under the nav. Opening: it grows from the click point over
+   Home (it is what the project page looks like before its entrance), then the browser switches
+   page. Returning without a browser transition: it stands in for the still-empty project page
+   and shrinks into the card. */
+html.pt-opening .view-cursor { visibility: hidden; }
+.pt-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: var(--bg);
+  pointer-events: none;
+}
+
+/* Cards that were on screen a moment ago stay as they were (no entrance replay). */
+.card-cell.pt-instant .card { transition: none !important; }
