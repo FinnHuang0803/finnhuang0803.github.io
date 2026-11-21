@@ -95,6 +95,39 @@
   color: var(--ink-2);
 }
 
+/* ---------- 7.2a Skills: same two-column layout as Recognition/Education (.about-list) ---------- */
+.skill-groups { display: grid; gap: 40px; }
+.skill-group__label {
+  font-size: var(--meta-size);
+  line-height: var(--meta-lh);
+  font-weight: var(--meta-weight-strong);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-3);
+}
+.capsules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+/* Outline capsule (reusable, §4.2.2): the card tag's shape and type (§4.2.1) with no fill.
+   A label, not a control: no hover or press state, default cursor, never focusable. */
+.capsule {
+  box-sizing: border-box;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-small);
+  white-space: nowrap;
+  cursor: default;
+}
+
 /* ---------- 7.3 / 7.4 Recognition and Education: label + heading left, ruled list right ---------- */
 .about-list {
   display: grid;
@@ -191,6 +224,8 @@
   transition: transform var(--spring-press-dur) var(--spring-press);
 }
 .btn > .btn__label, .btn > .btn__check { grid-area: 1 / 1; }
+/* Chinese label (Noto Sans TC subset): 550 matches the stroke of Inter 500 beside it (§2 Typography). */
+.btn [lang="zh-Hant"] { font-weight: 550; }
 .btn--primary   { --fill: var(--ink);     --fill-hover: color-mix(in oklab, var(--ink) 84%, var(--bg)); color: var(--bg); }
 .btn--secondary { --fill: var(--surface); --fill-hover: var(--nav-selected); color: var(--ink); }
 

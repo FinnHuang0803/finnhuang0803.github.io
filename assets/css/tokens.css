@@ -15,6 +15,16 @@
   font-style: normal;
   font-display: swap;
 }
+/* Inter has no Chinese glyphs: a subset of Noto Sans TC (variable weight) holding only the
+   Chinese characters used on the site (中文履歷). Rebuild it when new Chinese text is added. */
+@font-face {
+  font-family: "Noto Sans TC";
+  src: url("/assets/fonts/noto-sans-tc-subset-wght.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+4E2D, U+5C65, U+6587, U+6B77;
+}
 
 /* ---------- Colour tokens are registered as colours so a theme switch can cross-fade them ---------- */
 @property --bg           { syntax: "<color>"; inherits: true; initial-value: #F5F3EF; }
@@ -83,8 +93,8 @@
     --card-homeproof var(--theme-dur) var(--theme-ease), --card-manhole-cover var(--theme-dur) var(--theme-ease);
 
   /* ----- Type ----- */
-  --font-display: "Cal Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Cal Sans", "Inter", "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-text: "Inter", "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --tracking-text: -0.011em;     /* Inter, slightly negative (as in the Lab prototypes) */
   --tracking-small: -0.006em;    /* Inter at 13–15px */
