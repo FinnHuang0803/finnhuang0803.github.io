@@ -289,16 +289,21 @@ html.pe [data-page-enter] { opacity: 0; }
 .site-footer__link::before {
   content: "";
   position: absolute;
-  left: 0; right: 0; bottom: 2px;           /* 3px gap under the baseline */
-  height: 1.5px;
-  background: var(--accent);
+  left: 0; right: 0; bottom: 1.5px;         /* 3px gap under the baseline */
+  /* 1.5px on a normal (1x) screen can't be drawn as such: while the line animates the browser
+     blends it over two pixel rows, and once it stops it snaps it to one row (looks 1px). So the
+     line is two whole pixel rows, the second at half strength: the same 1.5px weight while
+     moving and at rest. Sharp screens (2x and up) draw a true 1.5px line. */
+  height: 2px;
+  background: linear-gradient(var(--accent) 0 1px, color-mix(in srgb, var(--accent) 50%, transparent) 1px 2px);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 350ms cubic-bezier(.65, 0, .35, 1);
-  /* Keep it on its own GPU layer at rest too: otherwise the browser draws it one way while it
-     animates and redraws it snapped to whole pixels when it stops, so 1.5px jumps to 1px. */
   will-change: transform;
   pointer-events: none;
+}
+@media (min-resolution: 2dppx) {
+  .site-footer__link::before { bottom: 2px; height: 1.5px; background: var(--accent); }
 }
 .site-footer__link:focus-visible::before { transform: scaleX(1); }
 @media (hover: hover) {
