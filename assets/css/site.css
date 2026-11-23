@@ -41,6 +41,9 @@ img, svg, video { display: block; max-width: 100%; }
 :focus { outline: none; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* Selected text: the accent at about 20%, text stays primary (§2). */
+::selection { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--ink); }
+
 .visually-hidden {
   position: absolute;
   width: 1px; height: 1px;
@@ -280,6 +283,26 @@ html.pe [data-page-enter] { opacity: 0; }
   position: relative;
   display: block;
   border-radius: 4px;
+}
+/* Underline (§3): 1px accent that grows from the left over 0.5s on hover and keyboard focus,
+   and shrinks back to the left on leave (same curve). Transform only, so nothing shifts. */
+.site-footer__link::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 500ms cubic-bezier(.65, 0, .35, 1);
+  pointer-events: none;
+}
+.site-footer__link:focus-visible::before { transform: scaleX(1); }
+@media (hover: hover) {
+  .site-footer__link:hover::before { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-footer__link::before { transition: none; }
 }
 .site-footer__link::after {           /* taller hit area */
   content: "";

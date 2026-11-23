@@ -1,5 +1,50 @@
 /* Home (Work): opening statements and project cards. Rules: site-design-system.md §4, §8. */
 
+/* ---------- Background pattern (§4.1): a 200px tile used as a mask, coloured by CSS.
+   The resting layer covers the whole page; the spotlight (home.js) is a small square that
+   follows the pointer, showing the same tile in a stronger colour through a radial fade.
+   The body is see-through here (html paints the same --bg), so the layer can sit behind
+   everything at z-index -1 without changing any other stacking. ---------- */
+body { position: relative; background: transparent; }
+.home-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.home-bg__rest,
+.home-bg__lit {
+  position: absolute;
+  -webkit-mask-image: url("/assets/img/home-pattern-tile.png");
+          mask-image: url("/assets/img/home-pattern-tile.png");
+  -webkit-mask-size: 200px 200px;
+          mask-size: 200px 200px;
+}
+.home-bg__rest { inset: 0; background: var(--pattern); }
+.home-bg__lit {
+  --r: 160px;
+  top: 0; left: 0;
+  width: calc(var(--r) * 2); height: calc(var(--r) * 2);
+  display: none;
+  background: var(--pattern-lit);
+  -webkit-mask-image: url("/assets/img/home-pattern-tile.png"), radial-gradient(circle var(--r), #000 60%, transparent 100%);
+          mask-image: url("/assets/img/home-pattern-tile.png"), radial-gradient(circle var(--r), #000 60%, transparent 100%);
+  -webkit-mask-size: 200px 200px, 100% 100%;
+          mask-size: 200px 200px, 100% 100%;
+  -webkit-mask-repeat: repeat, no-repeat;
+          mask-repeat: repeat, no-repeat;
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect;
+  opacity: 0;
+  transition: opacity 200ms ease;
+  will-change: transform;
+}
+@media (hover: hover) and (pointer: fine) {
+  .home-bg__lit { display: block; }
+  .home-bg__lit.is-on { opacity: 1; }
+}
+
 /* ---------- Opening: one statement, centred, filling the first screen (§2 pacing, §4.1) ---------- */
 .opening {
   position: relative;
@@ -20,21 +65,21 @@
   text-wrap: balance;
 }
 
-/* Scroll hint: a faint small arrow at the bottom centre of the first screen.
+/* Scroll hint: a small arrow (24px, --ink-2) at the bottom centre of the first screen.
    home.js shows it 2s after arrival (fades in while settling 8px down into place, on
    spring-enter) and hides it as soon
    as the page scrolls (200ms fade). Reduced motion: fade only. */
 .scroll-hint {
   position: absolute;
   left: 50%;
-  bottom: 32px;
-  width: 20px; height: 20px;
-  margin-left: -10px;
+  bottom: 64px;
+  width: 24px; height: 24px;
+  margin-left: -12px;
   overflow: visible;
   pointer-events: none;
   fill: none;
-  stroke: var(--ink-3);
-  stroke-width: 1.5;
+  stroke: var(--ink-2);
+  stroke-width: 1.75;
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0;
@@ -42,7 +87,7 @@
   transition: opacity 200ms ease, transform 200ms ease;
 }
 .scroll-hint.is-on {
-  opacity: .5;
+  opacity: 1;
   transform: none;
   transition:
     opacity var(--spring-enter-dur) var(--spring-enter),
@@ -54,12 +99,12 @@
 
 /* Split-flap board (built by /assets/js/flap.js). Every character is its own layer,
    drawn at the position the browser gives it in normal text. */
-.flap { position: relative; display: block; width: 100%; }
+.flap { position: relative; display: block; width: 100%; margin-inline: auto; }
 .flap__g {
   position: absolute;
   top: 0; left: 0;
   display: block;
-  height: calc(var(--hero-size) * var(--hero-lh));
+  height: calc(1em * var(--hero-lh));    /* font size may be lowered by flap.js to fit */
   white-space: pre;
   transform-origin: 50% 50%;            /* the hinge runs through the middle of the line */
   backface-visibility: hidden;
@@ -76,8 +121,13 @@
   visibility: hidden;
   pointer-events: none;
 }
-.flap__measure-statement { position: absolute; top: 0; left: 0; right: 0; display: block; }
-.flap__measure-half { display: block; }
+/* Wide: the sentence on one line, never wrapping. Narrow: the phrase on its own line. */
+.flap__measure-sentence { position: absolute; top: 0; left: 0; display: block; white-space: nowrap; }
+.flap__measure-phrase { white-space: nowrap; }
+@media (max-width: 767.98px) {
+  .flap__measure-sentence { right: 0; text-align: center; }
+  .flap__measure-static, .flap__measure-phrase { display: block; width: fit-content; margin-inline: auto; }
+}
 
 /* ---------- Project grid (§4.2): max 3 per row, all cards the same height ---------- */
 .work { padding-bottom: var(--section-gap); }

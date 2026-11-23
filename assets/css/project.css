@@ -55,7 +55,7 @@
   line-height: var(--meta-lh);
   font-weight: var(--meta-weight-strong);
   letter-spacing: var(--tracking-small);
-  color: var(--ink-3);
+  color: var(--accent-text);             /* matches the About section labels (§2) */
 }
 .info-line dd {
   margin: 4px 0 0;
@@ -115,7 +115,7 @@ figure { margin: 0; }
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-text);
   color: var(--marker-ink);
   box-shadow: 0 0 0 2px var(--bg), 0 1px 2px 2px var(--chip-shadow);
   display: grid;
@@ -135,7 +135,7 @@ figure { margin: 0; }
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-text);
   opacity: 0;
   pointer-events: none;
 }
@@ -170,7 +170,7 @@ figure { margin: 0; }
   width: 20px; height: 20px;
   margin-top: 2px;                         /* centred on the title's first line */
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-text);
   color: var(--marker-ink);
   box-shadow: 0 0 0 2px var(--bg), 0 1px 2px 2px var(--chip-shadow);
   display: grid;
@@ -586,12 +586,13 @@ figure { margin: 0; }
   --ink-2: var(--ink-2-light);
   --ink-3: var(--ink-3-light);
   --accent: var(--accent-light);
+  --accent-text: var(--accent-text-light);
   --bg: var(--panel-manhole);              /* the 2px ring around markers and badges */
   --surface: var(--panel-manhole-lit);     /* note highlight, one step darker than the panel */
   --marker-ink: var(--marker-ink-light);
 }
 /* Note badges stay identical to the markers on the panel, also when the notes sit below it. */
-.fig--exploded .note__badge { --accent: var(--accent-light); --marker-ink: var(--marker-ink-light); }
+.fig--exploded .note__badge { --accent: var(--accent-light); --accent-text: var(--accent-text-light); --marker-ink: var(--marker-ink-light); }
 .fig--exploded .notes {
   position: absolute;
   top: 0;

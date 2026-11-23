@@ -68,7 +68,7 @@
   line-height: var(--meta-lh);
   font-weight: var(--meta-weight-strong);
   letter-spacing: var(--tracking-small);
-  color: var(--ink-3);
+  color: var(--accent-text);             /* one of the few accent touches (§2) */
 }
 
 /* ---------- 7.2 How I work: three points side by side (same type as the Homeproof principles) ---------- */
@@ -302,7 +302,7 @@
 }
 .copy-fallback a {
   margin-left: 6px;
-  color: var(--accent);
+  color: var(--accent-text);
   border-radius: 2px;
   user-select: all;
   -webkit-user-select: all;

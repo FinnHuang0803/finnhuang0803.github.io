@@ -33,6 +33,8 @@
 <script type="module" src="/assets/js/home.js"></script>
 </head>
 <body>
+  <!-- Background pattern (§4.1): resting layer + pointer spotlight, drawn behind everything. -->
+  <div class="home-bg" aria-hidden="true"><div class="home-bg__rest"></div><div class="home-bg__lit"></div></div>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <!-- Navigation bar: identical on every page; only aria-current moves. -->
@@ -63,10 +65,10 @@
   <main id="main" class="page">
     <h1 class="visually-hidden">Work</h1>
 
-    <!-- Opening (§4.1): two statements, switching every 5s with a split-flap animation. -->
+    <!-- Opening (§4.1): "Good design is" + a phrase that changes every 3.5s with a split-flap wave. -->
     <section class="opening" aria-label="Opening">
       <div class="container">
-        <p class="opening__statement" data-page-enter data-flap='["Small details, big feelings.", "Quiet design, clear intent."]'>Small details, big feelings.</p>
+        <p class="opening__statement" data-page-enter data-flap-static="Good design is" data-flap='["a great user experience.", "intuitive to use.", "easy to understand.", "accessible to all."]'>Good design is a great user experience.</p>
       </div>
       <!-- Scroll hint: fades in 2s after arrival, fades out as soon as the page scrolls. -->
       <svg class="scroll-hint" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M6 13l6 6 6-6"/></svg>
