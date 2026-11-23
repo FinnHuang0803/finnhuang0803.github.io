@@ -284,26 +284,19 @@ html.pe [data-page-enter] { opacity: 0; }
   display: block;
   border-radius: 4px;
 }
-/* Underline (§3): 1.5px accent, about 3px under the baseline, that grows from the left over 0.35s on hover and keyboard focus,
+/* Underline (§3): 2px accent, 3px under the baseline, that grows from the left over 0.35s on hover and keyboard focus,
    and shrinks back to the left on leave (same curve). Transform only, so nothing shifts. */
 .site-footer__link::before {
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: 1.5px;         /* 3px gap under the baseline */
-  /* 1.5px on a normal (1x) screen can't be drawn as such: while the line animates the browser
-     blends it over two pixel rows, and once it stops it snaps it to one row (looks 1px). So the
-     line is two whole pixel rows, the second at half strength: the same 1.5px weight while
-     moving and at rest. Sharp screens (2x and up) draw a true 1.5px line. */
-  height: 2px;
-  background: linear-gradient(var(--accent) 0 1px, color-mix(in srgb, var(--accent) 50%, transparent) 1px 2px);
+  height: 2px;                              /* whole pixels: the same weight while moving and at rest */
+  background: var(--accent);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 350ms cubic-bezier(.65, 0, .35, 1);
   will-change: transform;
   pointer-events: none;
-}
-@media (min-resolution: 2dppx) {
-  .site-footer__link::before { bottom: 2px; height: 1.5px; background: var(--accent); }
 }
 .site-footer__link:focus-visible::before { transform: scaleX(1); }
 @media (hover: hover) {
