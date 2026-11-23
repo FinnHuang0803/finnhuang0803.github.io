@@ -36,8 +36,8 @@
 @property --ink-3        { syntax: "<color>"; inherits: true; initial-value: #696969; }
 @property --accent       { syntax: "<color>"; inherits: true; initial-value: #E14D0A; }
 @property --accent-text  { syntax: "<color>"; inherits: true; initial-value: #CB3D00; }
-@property --pattern      { syntax: "<color>"; inherits: true; initial-value: #F0EDE8; }
-@property --pattern-lit  { syntax: "<color>"; inherits: true; initial-value: #ECE9E4; }
+@property --pattern      { syntax: "<color>"; inherits: true; initial-value: #F3F1ED; }
+@property --pattern-lit  { syntax: "<color>"; inherits: true; initial-value: #F0EDE8; }
 @property --card-ventari       { syntax: "<color>"; inherits: true; initial-value: #DCE6E7; }
 @property --card-clasp         { syntax: "<color>"; inherits: true; initial-value: #E7E3D6; }
 @property --card-homeproof     { syntax: "<color>"; inherits: true; initial-value: #D9E6E0; }
@@ -55,8 +55,8 @@
   --ink-3: #696969;
   --accent: #E14D0A;        /* lines, dots, underlines, shapes */
   --accent-text: #CB3D00;   /* orange text, and orange fills that carry text (markers) */
-  --pattern: #F0EDE8;       /* Home background pattern, resting (§4.1) */
-  --pattern-lit: #ECE9E4;   /* Home background pattern under the pointer */
+  --pattern: #F3F1ED;       /* Home background pattern, resting: barely visible (§4.1) */
+  --pattern-lit: #F0EDE8;   /* Home background pattern under the pointer */
 
   /* Project card tints (option A "Soft") */
   --card-ventari: #DCE6E7;
@@ -160,8 +160,8 @@
   --ink-3: #8C8C8C;
   --accent: #FF7A3D;
   --accent-text: #FF7A3D;
-  --pattern: #1B1A18;
-  --pattern-lit: #24221F;
+  --pattern: #181716;
+  --pattern-lit: #1B1A18;
   --card-ventari: #1C2527;
   --card-clasp: #25241E;
   --card-homeproof: #1B2622;
