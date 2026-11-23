@@ -1,5 +1,5 @@
 // Home headline (site-design-system.md §4.1): "Good design is" stays still, followed by a
-// phrase that changes every 3.5s with a split-flap wave.
+// phrase that changes every 3s with a split-flap wave.
 //
 // How it works
 // - The sentence keeps the exact look of normal text: every character is drawn at the
@@ -18,7 +18,7 @@
 
 import { SPRINGS, reduceMotion } from "./spring.js";
 
-const SWITCH_EVERY = 3500;       // ms between the start of two switches
+const SWITCH_EVERY = 3000;       // ms between the start of two switches
 const FLIP_TOP = 150;            // first half: old bottom half folds up (ms), ease-in
 const WAVE = 35;                 // ms between neighbouring cells
 const FADE = 200;                // reduced-motion cross-fade (ms)
@@ -242,7 +242,7 @@ export function initFlap(el) {
     raf = requestAnimationFrame(render);
   }
 
-  // ---------- Timing: every 3.5s while the opening is on screen and the tab is visible ----------
+  // ---------- Timing: every 3s while the opening is on screen and the tab is visible ----------
   function schedule() {
     clearTimeout(timer);
     if (visible && !document.hidden) timer = setTimeout(() => { next(); schedule(); }, SWITCH_EVERY);
