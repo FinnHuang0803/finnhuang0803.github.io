@@ -295,6 +295,9 @@ html.pe [data-page-enter] { opacity: 0; }
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 350ms cubic-bezier(.65, 0, .35, 1);
+  /* Keep it on its own GPU layer at rest too: otherwise the browser draws it one way while it
+     animates and redraws it snapped to whole pixels when it stops, so 1.5px jumps to 1px. */
+  will-change: transform;
   pointer-events: none;
 }
 .site-footer__link:focus-visible::before { transform: scaleX(1); }
