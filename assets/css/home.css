@@ -22,14 +22,15 @@ body { position: relative; background: transparent; }
           mask-size: 200px 200px;
 }
 .home-bg__rest { inset: 0; background: var(--pattern); }
+/* Falloff (1 - t²)²: fades smoothly across the whole circle, no solid centre or hard rim. */
 .home-bg__lit {
   --r: 160px;
   top: 0; left: 0;
   width: calc(var(--r) * 2); height: calc(var(--r) * 2);
   display: none;
   background: var(--pattern-lit);
-  -webkit-mask-image: url("/assets/img/home-pattern-tile.png"), radial-gradient(circle var(--r), #000 60%, transparent 100%);
-          mask-image: url("/assets/img/home-pattern-tile.png"), radial-gradient(circle var(--r), #000 60%, transparent 100%);
+  -webkit-mask-image: url("/assets/img/home-pattern-tile.png"), radial-gradient(circle var(--r), rgb(0 0 0 / 1) 0%, rgb(0 0 0 / 0.969) 12.5%, rgb(0 0 0 / 0.879) 25%, rgb(0 0 0 / 0.739) 37.5%, rgb(0 0 0 / 0.563) 50%, rgb(0 0 0 / 0.371) 62.5%, rgb(0 0 0 / 0.191) 75%, rgb(0 0 0 / 0.055) 87.5%, rgb(0 0 0 / 0) 100%);
+          mask-image: url("/assets/img/home-pattern-tile.png"), radial-gradient(circle var(--r), rgb(0 0 0 / 1) 0%, rgb(0 0 0 / 0.969) 12.5%, rgb(0 0 0 / 0.879) 25%, rgb(0 0 0 / 0.739) 37.5%, rgb(0 0 0 / 0.563) 50%, rgb(0 0 0 / 0.371) 62.5%, rgb(0 0 0 / 0.191) 75%, rgb(0 0 0 / 0.055) 87.5%, rgb(0 0 0 / 0) 100%);
   -webkit-mask-size: 200px 200px, 100% 100%;
           mask-size: 200px 200px, 100% 100%;
   -webkit-mask-repeat: repeat, no-repeat;
