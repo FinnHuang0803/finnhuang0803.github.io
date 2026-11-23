@@ -7,8 +7,8 @@
 // - The static part is drawn once and never moves. Each character of the phrase is a "cell"
 //   that pairs the old character with the new one; cells beyond a phrase's length flip to
 //   or from blank.
-// - A flip folds the top half of the old character down (150ms, ease-in) and swings the new
-//   bottom half into place on spring-state. Cell n starts 35ms after cell n-1 (a left-to-right
+// - A flip runs bottom to top: the bottom half of the old character folds up (150ms, ease-in)
+//   and the new top half swings up into place on spring-state. Cell n starts 35ms after cell n-1 (a left-to-right
 //   wave).
 // - Wide screens: the sentence sits on one line. The width of the longest sentence is
 //   reserved and centred, so "Good design is" stays put; the font size is lowered only as far
@@ -19,7 +19,7 @@
 import { SPRINGS, reduceMotion } from "./spring.js";
 
 const SWITCH_EVERY = 3500;       // ms between the start of two switches
-const FLIP_TOP = 150;            // top half falls (ms), ease-in
+const FLIP_TOP = 150;            // first half: old bottom half folds up (ms), ease-in
 const WAVE = 35;                 // ms between neighbouring cells
 const FADE = 200;                // reduced-motion cross-fade (ms)
 
@@ -191,16 +191,16 @@ export function initFlap(el) {
     } else if (t < FLIP_TOP) {
       const u = clamp01(t / FLIP_TOP);
       const e = easeIn(u);
-      put(c, "topFlap", a, -90 * e, 1 - 0.4 * e);
-      put(c, "topStatic", b, 0, u);
-      put(c, "bottomStatic", a, 0, 1);
-      put(c, "bottomFlap", null);
-    } else {
-      const angle = 90 * (1 - springAt((t - FLIP_TOP) / 1000));   // 90 → 0, small spring settle
+      put(c, "bottomFlap", a, 90 * e, 1 - 0.4 * e);              // old bottom half folds up
+      put(c, "bottomStatic", b, 0, u);                            // new bottom half revealed
+      put(c, "topStatic", a, 0, 1);
       put(c, "topFlap", null);
-      put(c, "topStatic", b, 0, 1);
-      put(c, "bottomFlap", b, angle, 1);
-      put(c, "bottomStatic", a, 0, clamp01(angle / 90));
+    } else {
+      const angle = -90 * (1 - springAt((t - FLIP_TOP) / 1000));  // -90 → 0, small spring settle
+      put(c, "bottomFlap", null);
+      put(c, "bottomStatic", b, 0, 1);
+      put(c, "topFlap", b, angle, 1);                             // new top half swings up into place
+      put(c, "topStatic", a, 0, clamp01(-angle / 90));
     }
   }
 
